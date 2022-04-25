@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
+import { HomeService } from './home.service';
 
 @Component({
   selector: 'home',
@@ -7,9 +9,15 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HomeComponent implements OnInit {
 
-  constructor() { }
+  constructor(
+    private homeService: HomeService
+  ) { }
 
   ngOnInit(): void {
+    this.homeService.getWelcomeText().subscribe(row => {
+      console.log(row);
+    })
+    
   }
 
 }
