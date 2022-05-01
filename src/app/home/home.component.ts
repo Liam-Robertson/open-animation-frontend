@@ -8,16 +8,14 @@ import { HomeService } from './home.service';
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
+  test!: string;
 
   constructor(
     private homeService: HomeService
   ) { }
 
-  ngOnInit(): void {
-    this.homeService.getWelcomeText().subscribe(row => {
-      console.log(row);
-    })
-    
+  async ngOnInit(): Promise<void> {
+    this.test = await lastValueFrom(this.homeService.getWelcomeText())
   }
 
 }

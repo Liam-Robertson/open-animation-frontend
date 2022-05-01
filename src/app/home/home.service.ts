@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { Injectable, OnInit } from '@angular/core';
+import { lastValueFrom, Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { catchError } from 'rxjs/operators';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
@@ -12,7 +12,7 @@ export class HomeService {
   constructor(public http: HttpClient) {}
 
   getWelcomeText(): Observable<string> {
-    return this.http.get("http://" + environment.env + "/hello", {responseType: "text"});
+    return this.http.get(environment.env + "/", {responseType: "text"});
   }
 
   errorHandler(error: HttpErrorResponse) {
