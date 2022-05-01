@@ -1,2 +1,18 @@
-<p>home works!</p>
-<p>The test is: {{ test }}</p>
+<div class="main-container">
+    <video class="video-container" src="#" type="video/mp4"></video>
+    <div class="upload-container">
+        <div class="flex-container">
+            <input type="file" (change)="createSnippetFromFile($event)" id="selectFile" #selectFileEl>
+            <div class="button-container">
+                <button *ngIf="selectFileEl.value==''" mat-raised-button color="primary" type="button" (click)="selectFile()">
+                    <mat-icon>attach_file</mat-icon>
+                    Select File
+                </button>
+                <button *ngIf="selectFileEl.value!=''" mat-raised-button color="primary" type="button" (click)="uploadFile()">
+                    <mat-icon>cloud_upload</mat-icon>
+                    Upload File
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
