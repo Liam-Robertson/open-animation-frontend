@@ -15,6 +15,11 @@ export class HomeService {
     return this.http.get(environment.env + "/", {responseType: "text"});
   }
 
+  getTapestry(): Observable<Blob> {
+    return this.http.get(environment.env + "/getTapestry", {responseType: "blob"})
+    .pipe(catchError(this.errorHandler));
+  }
+
   errorHandler(error: HttpErrorResponse) {
     const myReader = new FileReader();
     myReader.onload = function(event){

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { lastValueFrom } from 'rxjs';
 import { Snippet } from '../models/Snippet.model';
 import { HomeService } from './home.service';
@@ -12,10 +13,17 @@ export class HomeComponent implements OnInit {
   selectedFile: File | null = null
 
   constructor(
-    private homeService: HomeService
+    private homeService: HomeService,
+    private sanitizer: DomSanitizer
   ) { }
 
-  async ngOnInit(): Promise<void> {
+  async ngOnInit() {
+
+    this.homeService.getTapestry().subscribe((tapestry: Blob) => {
+      const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
+      tapestryEl.src = window.URL.createObjectURL(tapestry)
+    })
+
   }
 
   createSnippetFromFile(event: any) {
