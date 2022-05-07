@@ -3,6 +3,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { lastValueFrom } from 'rxjs';
 import { Snippet } from '../models/Snippet.model';
 import { HomeService } from './home.service';
+import user from '../key.json';
 
 @Component({
   selector: 'home',
@@ -18,6 +19,9 @@ export class HomeComponent implements OnInit {
   ) { }
 
   async ngOnInit() {
+
+    console.log(btoa(`${user.username}:${user.password}`));
+    
 
     this.homeService.getTapestry().subscribe((tapestry: Blob) => {
       const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
