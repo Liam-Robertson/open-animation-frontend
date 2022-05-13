@@ -1,18 +1,16 @@
 <div class="main-container">
-    <video id="video-container" src="#" type="video/mp4" controls></video>
+    <canvas *ngIf="canvasBool" id="canvas-container" width="200" height="100"></canvas>
+    <video [hidden]="!videoBool" id="video-container" src="#" type="video/mp4" controls></video>
     <div class="upload-container">
-        <div class="flex-container">
-            <input type="file" (change)="createSnippetFromFile($event)" id="selectFile" #selectFileEl>
-            <div class="button-container">
-                <button *ngIf="selectFileEl.value==''" mat-raised-button color="primary" type="button" (click)="selectFile()">
-                    <mat-icon>attach_file</mat-icon>
-                    Select File
-                </button>
-                <button *ngIf="selectFileEl.value!=''" mat-raised-button color="primary" type="button" (click)="uploadFile()">
-                    <mat-icon>cloud_upload</mat-icon>
-                    Upload File
-                </button>
-            </div>
+        <div class="button-container">
+            <button mat-raised-button color="primary" type="button" (click)="showCanvas()">
+                <mat-icon>create</mat-icon>
+                Show Drawing Canvas
+            </button>
+            <button mat-raised-button color="primary" type="button" (click)="uploadFile()">
+                <mat-icon>cloud_upload</mat-icon>
+                Upload File
+            </button>
         </div>
     </div>
 </div>

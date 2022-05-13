@@ -12,6 +12,8 @@ import user from '../key.json';
 })
 export class HomeComponent implements OnInit {
   selectedFile: File | null = null
+  canvasBool = false;
+  videoBool = true;
 
   constructor(
     private homeService: HomeService,
@@ -20,14 +22,24 @@ export class HomeComponent implements OnInit {
 
   async ngOnInit() {
 
-    console.log(btoa(`${user.username}:${user.password}`));
-    
-
     this.homeService.getTapestry().subscribe((tapestry: Blob) => {
       const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
       tapestryEl.src = window.URL.createObjectURL(tapestry)
     })
 
+  }
+
+  showCanvas() {
+    switch (this.canvasBool) {
+      case true:
+        this.canvasBool = false
+        this.videoBool = true 
+        break
+      case false:
+        this.canvasBool = true
+        this.videoBool = false 
+        break
+    }
   }
 
   createSnippetFromFile(event: any) {

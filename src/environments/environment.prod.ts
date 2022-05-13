@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  env: "https://159.65.94.158:8443/",
-  // env: "159.65.94.158/api/",
+  env: "https://www.syllabarypoemgenerator.xyz:8443/",
+  // env: "https://www.syllabarypoemgenerator.xyz/api/",
 };

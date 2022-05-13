@@ -18,13 +18,7 @@ export class HomeService {
   }
 
   getTapestry(): Observable<any> {
-    // const httpOptions = {
-    //   headers: new HttpHeaders({
-    //     'Content-Type':  'application/octet-stream',
-    //     'Authorization': 'Basic ' + btoa(`${user.username}:${user.password}`)
-    //   }), responseType: 'text'
-    // };
-    const headers = new HttpHeaders({authorization: 'Basic ' + btoa(`${user.username}:${user.password}`)})
+    const headers = new HttpHeaders({Authorization: 'Basic ' + btoa(`${user.username}:${user.password}`)})
     return this.http.get(environment.env + "getTapestry", {'headers': headers, responseType: 'blob'})
   }
 
@@ -40,4 +34,3 @@ export class HomeService {
 }
 
 
-// return this.http.get<string>("http://" + environment.env + "/hello").pipe(catchError(this.errorHandler));
