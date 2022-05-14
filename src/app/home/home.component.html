@@ -1,21 +1,43 @@
 <div class="main-container">
-    <canvas [hidden]="!canvasBool" id="canvas-container" 
-    (mousemove)="onMouseMove($event)" 
-    (mousedown)="onMouseDown($event)" 
-    (mouseup)="onMouseUp()" 
-    #canvasEl
-    ></canvas>
-    <video [hidden]="!videoBool" id="video-container" src="#" type="video/mp4" controls></video>
-    <div class="upload-container">
-        <div class="button-container">
-            <button mat-raised-button color="primary" type="button" (click)="showCanvas()">
-                <mat-icon>create</mat-icon>
-                Show Drawing Canvas
-            </button>
-            <button mat-raised-button color="primary" type="button">
-                <mat-icon>cloud_upload</mat-icon>
-                Upload File
-            </button>   
+    <div class="app-container">
+        <canvas [hidden]="!canvasBool" id="canvas-container" 
+            (mousemove)="onMouseMove($event)" 
+            (mousedown)="onMouseDown($event)" 
+            (mouseup)="onMouseUp()" 
+            (mouseleave)="onMouseLeave()" 
+            (mouseenter)="onMouseEnter()" 
+            #canvasEl
+        ></canvas>
+        <video [hidden]="!videoBool" id="video-container" src="#" type="video/mp4" controls></video>
+        <div *ngIf="instructionsBool" id="instructions-container">
+            <ul>
+                <li>The Open Animation allows you to add drawings to a larger animation</li>
+                <li>You can see the current animation by going to the "Video Player" tab</li>
+            </ul>
+            <br><br>
+            <p>Steps to add a drawing to the animation:</p>
+            <ul>
+                <li>Go to the "Canvas" tab</li>
+                <li>Draw a picture that fits in with the soundtrack</li>
+                <li>Click "Upload"</li>
+                <li>Input the video time where you want your drawing to be inserted</li>
+                <li>Go to the Video Player tab and you will see that your picture has been added to the video</li>
+            </ul>
         </div>
+    </div>
+    
+    <div class="button-container">
+        <button id="video-button" mat-raised-button color="primary" type="button" (hover)="true" (click)="toggleVideoPlayer()">
+            <mat-icon>video_library</mat-icon>
+            <div>Video Player</div>
+        </button>
+        <button id="canvas-button" mat-raised-button color="primary" type="button" (click)="toggleCanvas()">
+            <mat-icon>create</mat-icon>
+            <div>Canvas</div>
+        </button>
+        <button id="instructions-button" mat-raised-button color="primary" type="button" (click)="toggleInstructions()">
+            <mat-icon>info</mat-icon>
+            <div>Instructions</div>
+        </button> 
     </div>
 </div>

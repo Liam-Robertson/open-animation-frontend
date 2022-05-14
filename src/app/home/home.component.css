@@ -7,15 +7,33 @@
     margin: auto;
 }
 
-#video-container {
+.app-container {
+    font-size: 1.5em;
+    line-height: 1.2;
     margin-top: 3em;
-    background-color: black;
+    background-color: white;
     width: 100%;
     height: 75vh;
 }
 
+#video-container {
+    background-color: black;
+    width: 100%;
+    height: 100%;
+}
+
+#instructions-container {
+    padding-top: 3em;
+    width: 80%;
+    height: 100%;
+    margin: auto;
+}
+
+#instructions-container ul {
+    width: 100%;
+}
+
 #canvas-container {
-    margin-top: 3em;
     background-color: rgb(255, 255, 255);
     border: 1px solid black;
     border-radius: 0.5em;
@@ -25,9 +43,11 @@
     cursor: crosshair;
 }
 
+/* ///////////////////////////////////////////////////////////////////// */
+
 .button-container {
     display: flex;
-    width: 50%;
+    width: 80%;
     margin: auto;
     margin-top: 1em;
     justify-content: space-evenly;

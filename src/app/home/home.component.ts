@@ -25,8 +25,10 @@ interface Line {
 })
 export class HomeComponent implements OnInit {
   @ViewChild('canvasEl') canvasEl!: ElementRef;
-  canvasBool: boolean = false
-  videoBool: boolean = true;
+  videoBool: boolean = false;
+  canvasBool: boolean = false;
+  instructionsBool: boolean = false;
+
   ctx!: CanvasRenderingContext2D;
   strokeStyle: string = '#000000';
   prevPos!: Position; 
@@ -39,6 +41,8 @@ export class HomeComponent implements OnInit {
   ) { }
 
   async ngOnInit() {
+    this.toggleVideoPlayer()
+
     this.homeService.getTapestry().subscribe((tapestry: Blob) => {
       const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
       tapestryEl.src = window.URL.createObjectURL(tapestry)
@@ -51,6 +55,18 @@ export class HomeComponent implements OnInit {
   }
 
   onMouseUp() {
+    if (this.isPainting) {
+      this.isPainting = false;
+    }
+  }
+
+  onMouseLeave() {
+    if (this.isPainting) {
+      this.isPainting = false;
+    }
+  }
+
+  onMouseEnter() {
     if (this.isPainting) {
       this.isPainting = false;
     }
@@ -80,22 +96,43 @@ export class HomeComponent implements OnInit {
     };
   }
 
-  showCanvas() {
-    switch (this.canvasBool) {
-      case true:
-        this.canvasBool = false
-        this.videoBool = true 
-    break
-      case false:
-        this.canvasBool = true
-        this.videoBool = false 
-        this.ctx = this.canvasEl.nativeElement.getContext('2d');
-        this.canvasEl.nativeElement.height = "700"
-        this.canvasEl.nativeElement.width = "1090"
-        this.ctx.lineJoin = 'round'
-        this.ctx.lineCap = 'round'
-        this.ctx.lineWidth = 5
-    break
+  toggleCanvas() {
+    if (!this.canvasBool) {
+      this.canvasBool = true;
+      (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+      this.instructionsBool = false;
+      this.videoBool = false;
+      (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+
+      this.ctx = this.canvasEl.nativeElement.getContext('2d');
+      this.canvasEl.nativeElement.height = "700"
+      this.canvasEl.nativeElement.width = "1090"
+      this.ctx.lineJoin = 'round'
+      this.ctx.lineCap = 'round'
+      this.ctx.lineWidth = 5
+    }
+  }
+
+  toggleInstructions() {
+    if (!this.instructionsBool) {
+        this.instructionsBool = true;
+        (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+        this.canvasBool = false;
+        this.videoBool = false;
+        (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+        (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      }
+  }
+
+  toggleVideoPlayer() {
+    if (!this.videoBool) {
+      this.videoBool = true;
+      (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+      this.instructionsBool = false;
+      this.canvasBool = false;
+      (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
     }
   }
 
