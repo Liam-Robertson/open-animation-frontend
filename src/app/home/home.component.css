@@ -23,6 +23,10 @@
     height: 75vh;
 }
 
+#canvas-container:hover {
+    cursor: crosshair;
+}
+
 .button-container {
     display: flex;
     width: 50%;
