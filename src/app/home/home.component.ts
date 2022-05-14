@@ -4,9 +4,19 @@ import { fromEvent, Subscription } from 'rxjs';
 import { HomeService } from './home.service';
 import { pairwise, switchMap, takeUntil } from 'rxjs/operators';
 
-declare interface Position {
-  offsetX: number;
-  offsetY: number;
+interface Position {
+  xPos: number;
+  yPos: number;
+}
+
+interface LineIncrement {
+  startPos: Position;
+  endPos: Position;
+}
+
+interface Line {
+  startPos: Position;
+  endPos: Position;
 }
 @Component({
   selector: 'home',
@@ -18,129 +28,55 @@ export class HomeComponent implements OnInit {
   canvasBool: boolean = false
   videoBool: boolean = true;
   ctx!: CanvasRenderingContext2D;
-  strokeStyle: string = '#FAD8D6';
-  position!: {
-    start: {};
-    stop: {};
-  };
-  line = [];
-  prevPos: Position = {
-    offsetX: 0,
-    offsetY: 0,
-  };
+  strokeStyle: string = '#000000';
+  prevPos!: Position; 
+  line: LineIncrement[] = [];
   isPainting = false;
+  lineIncrement!: LineIncrement;
 
   constructor(
     private homeService: HomeService,
   ) { }
 
   async ngOnInit() {
-
     this.homeService.getTapestry().subscribe((tapestry: Blob) => {
       const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
       tapestryEl.src = window.URL.createObjectURL(tapestry)
     })
-    
-      
   }
 
-  startDrawing(event: MouseEvent) {
-    console.log(this.canvasEl);
+  onMouseDown(event: MouseEvent) {
+    this.isPainting = true;
+    this.prevPos = this.getPositionFromEvent(event)
+  }
 
-    const xPos = event.clientX
-    const yPos = event.clientY
-    this.isPainting = true
-    console.log(event);
-    
-    const startingPos: MouseEvent = {
-      clientX: 0, clientY: 0,
-      altKey: false,
-      button: 0,
-      buttons: 0,
-      ctrlKey: false,
-      metaKey: false,
-      movementX: 0,
-      movementY: 0,
-      offsetX: 0,
-      offsetY: 0,
-      pageX: 0,
-      pageY: 0,
-      relatedTarget: null,
-      screenX: 0,
-      screenY: 0,
-      shiftKey: false,
-      x: 0,
-      y: 0,
-      getModifierState: function (keyArg: string): boolean {
-        throw new Error('Function not implemented.');
-      },
-      initMouseEvent: function (typeArg: string, canBubbleArg: boolean, cancelableArg: boolean, viewArg: Window, detailArg: number, screenXArg: number, screenYArg: number, clientXArg: number, clientYArg: number, ctrlKeyArg: boolean, altKeyArg: boolean, shiftKeyArg: boolean, metaKeyArg: boolean, buttonArg: number, relatedTargetArg: EventTarget | null): void {
-        throw new Error('Function not implemented.');
-      },
-      detail: 0,
-      view: null,
-      which: 0,
-      initUIEvent: function (typeArg: string, bubblesArg?: boolean, cancelableArg?: boolean, viewArg?: Window | null, detailArg?: number): void {
-        throw new Error('Function not implemented.');
-      },
-      bubbles: false,
-      cancelBubble: false,
-      cancelable: false,
-      composed: false,
-      currentTarget: null,
-      defaultPrevented: false,
-      eventPhase: 0,
-      isTrusted: false,
-      returnValue: false,
-      srcElement: null,
-      target: null,
-      timeStamp: 0,
-      type: '',
-      composedPath: function (): EventTarget[] {
-        throw new Error('Function not implemented.');
-      },
-      initEvent: function (type: string, bubbles?: boolean, cancelable?: boolean): void {
-        throw new Error('Function not implemented.');
-      },
-      preventDefault: function (): void {
-        throw new Error('Function not implemented.');
-      },
-      stopImmediatePropagation: function (): void {
-        throw new Error('Function not implemented.');
-      },
-      stopPropagation: function (): void {
-        throw new Error('Function not implemented.');
-      },
-      AT_TARGET: 0,
-      BUBBLING_PHASE: 0,
-      CAPTURING_PHASE: 0,
-      NONE: 0
-    }
-    
+  onMouseUp() {
     if (this.isPainting) {
-      const offSetData = { xPos, yPos };
-      this.position = {
-        start: { ...this.prevPos },
-        stop: { ...offSetData },
-      };
-      // this.line = this.line.concat(this.position);
-      this.draw(startingPos, event, this.strokeStyle);
+      this.isPainting = false;
     }
   }
 
-  draw(
-    { offsetX: x, offsetY: y }: Position,
-    { offsetX, offsetY }: Position,
-    strokeStyle: string
-  ){
+  onMouseMove(event: MouseEvent) {
+    if (this.isPainting) {
+      const currentPos: Position = this.getPositionFromEvent(event)
+      this.lineIncrement = {
+        startPos: this.prevPos,
+        endPos: currentPos
+      };
+      this.line.push(this.lineIncrement);
+      this.draw(this.prevPos, currentPos, this.strokeStyle);
+    }
+  }
+
+  draw(prevPos: Position, currentPos: Position, strokeStyle: string) {
     this.ctx.beginPath(); 
     this.ctx.strokeStyle = strokeStyle;
-    this.ctx.moveTo(x, y);
-    this.ctx.lineTo(offsetX, offsetY);
+    this.ctx.moveTo(prevPos.xPos, prevPos.yPos);
+    this.ctx.lineTo(currentPos.xPos, currentPos.yPos);
     this.ctx.stroke();
     this.prevPos = {
-      offsetX,
-      offsetY,
+      xPos: currentPos.xPos,
+      yPos: currentPos.yPos,
     };
   }
 
@@ -153,15 +89,26 @@ export class HomeComponent implements OnInit {
       case false:
         this.canvasBool = true
         this.videoBool = false 
-        console.log(this.canvasEl);
-        // this.canvasEl.nativeElement.width = 1000;
-        // this.canvasEl.nativeElement.height = 800;
         this.ctx = this.canvasEl.nativeElement.getContext('2d');
+        this.canvasEl.nativeElement.height = "700"
+        this.canvasEl.nativeElement.width = "1090"
         this.ctx.lineJoin = 'round'
         this.ctx.lineCap = 'round'
         this.ctx.lineWidth = 5
     break
     }
+  }
+
+  getPositionFromEvent(event: MouseEvent) {
+    const rect: DOMRect = this.canvasEl.nativeElement.getBoundingClientRect()
+    const canvasXPos = (event.clientX - rect.left) / rect.width * 1090
+    const canvasYPos = (event.clientY - rect.top) / rect.height * 700
+    
+    const position: Position = {
+      xPos: canvasXPos, 
+      yPos: canvasYPos
+    };
+    return position
   }
 
 }

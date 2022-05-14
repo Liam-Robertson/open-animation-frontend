@@ -1,5 +1,10 @@
 <div class="main-container">
-    <canvas [hidden]="!canvasBool" id="canvas-container" (mousemove)="startDrawing($event)" #canvasEl></canvas>
+    <canvas [hidden]="!canvasBool" id="canvas-container" 
+    (mousemove)="onMouseMove($event)" 
+    (mousedown)="onMouseDown($event)" 
+    (mouseup)="onMouseUp()" 
+    #canvasEl
+    ></canvas>
     <video [hidden]="!videoBool" id="video-container" src="#" type="video/mp4" controls></video>
     <div class="upload-container">
         <div class="button-container">
