@@ -3,6 +3,9 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { fromEvent, Subscription } from 'rxjs';
 import { HomeService } from './home.service';
 import { pairwise, switchMap, takeUntil } from 'rxjs/operators';
+import { faEraser } from '@fortawesome/free-solid-svg-icons';
+import { faPaintBrush } from '@fortawesome/free-solid-svg-icons';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 interface Position {
   xPos: number;
@@ -28,13 +31,19 @@ export class HomeComponent implements OnInit {
   videoBool: boolean = false;
   canvasBool: boolean = false;
   instructionsBool: boolean = false;
-
+  
+  faEraser = faEraser;
+  faPaintBrush = faPaintBrush;
+  faTrash = faTrash;
+  canvasHeight = 700
+  canvasWidth = 1535
   ctx!: CanvasRenderingContext2D;
   strokeStyle: string = '#000000';
   prevPos!: Position; 
   line: LineIncrement[] = [];
   isPainting = false;
   lineIncrement!: LineIncrement;
+  canvasLoadCounter!: number;
 
   constructor(
     private homeService: HomeService,
@@ -100,17 +109,23 @@ export class HomeComponent implements OnInit {
     if (!this.canvasBool) {
       this.canvasBool = true;
       (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+      (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+      (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       this.instructionsBool = false;
       this.videoBool = false;
       (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
 
-      this.ctx = this.canvasEl.nativeElement.getContext('2d');
-      this.canvasEl.nativeElement.height = "700"
-      this.canvasEl.nativeElement.width = "1090"
-      this.ctx.lineJoin = 'round'
-      this.ctx.lineCap = 'round'
-      this.ctx.lineWidth = 5
+      if (this.canvasLoadCounter != 1) {
+        this.ctx = this.canvasEl.nativeElement.getContext('2d');
+        this.canvasEl.nativeElement.height = this.canvasHeight.toString()
+        this.canvasEl.nativeElement.width = this.canvasWidth.toString()
+        this.ctx.lineJoin = 'round'
+        this.ctx.lineCap = 'round'
+        this.ctx.lineWidth = 5
+        this.canvasLoadCounter += 1
+      }
     }
   }
 
@@ -136,10 +151,28 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  toggleBrushTool() {
+    (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+    (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+  }
+
+  toggleEraserTool() {
+    (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+    (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+  }
+
+  toggleTrashTool() {
+    (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+  }
+
   getPositionFromEvent(event: MouseEvent) {
     const rect: DOMRect = this.canvasEl.nativeElement.getBoundingClientRect()
-    const canvasXPos = (event.clientX - rect.left) / rect.width * 1090
-    const canvasYPos = (event.clientY - rect.top) / rect.height * 700
+    const canvasXPos = (event.clientX - rect.left) / rect.width * this.canvasWidth
+    const canvasYPos = (event.clientY - rect.top) / rect.height * this.canvasHeight
     
     const position: Position = {
       xPos: canvasXPos, 

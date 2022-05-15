@@ -1,28 +1,41 @@
 <div class="main-container">
+    <div class="spacer-top">
+        <div [hidden]="!canvasBool" class="canvas-tool" id="brush-tool" (click)="toggleBrushTool()">
+            <fa-icon [icon]="faPaintBrush" transform="grow-15 down-15"></fa-icon>
+        </div>
+        <div [hidden]="!canvasBool" class="canvas-tool" id="eraser-tool" (click)="toggleEraserTool()">
+            <fa-icon [icon]="faEraser" transform="grow-20 down-15"></fa-icon>
+        </div>
+        <div [hidden]="!canvasBool" class="canvas-tool" id="trash-tool" (click)="toggleTrashTool()">
+            <fa-icon [icon]="faTrash" transform="grow-15 down-15"></fa-icon>
+        </div>
+    </div>
     <div class="app-container">
-        <canvas [hidden]="!canvasBool" id="canvas-container" 
-            (mousemove)="onMouseMove($event)" 
-            (mousedown)="onMouseDown($event)" 
-            (mouseup)="onMouseUp()" 
-            (mouseleave)="onMouseLeave()" 
-            (mouseenter)="onMouseEnter()" 
-            #canvasEl
-        ></canvas>
+        <div [hidden]="!canvasBool" class="canvas-container">
+            <canvas class="canvasEl" 
+                (mousemove)="onMouseMove($event)" 
+                (mousedown)="onMouseDown($event)" 
+                (mouseup)="onMouseUp()" 
+                (mouseleave)="onMouseLeave()" 
+                (mouseenter)="onMouseEnter()" 
+                #canvasEl
+            ></canvas>
+        </div>
         <video [hidden]="!videoBool" id="video-container" src="#" type="video/mp4" controls></video>
-        <div *ngIf="instructionsBool" id="instructions-container">
-            <ul>
-                <li>The Open Animation allows you to add drawings to a larger animation</li>
-                <li>You can see the current animation by going to the "Video Player" tab</li>
-            </ul>
-            <br><br>
-            <p>Steps to add a drawing to the animation:</p>
-            <ul>
-                <li>Go to the "Canvas" tab</li>
-                <li>Draw a picture that fits in with the soundtrack</li>
-                <li>Click "Upload"</li>
-                <li>Input the video time where you want your drawing to be inserted</li>
-                <li>Go to the Video Player tab and you will see that your picture has been added to the video</li>
-            </ul>
+        <div [hidden]="!instructionsBool" id="instructions-container">
+            <div class="text-container">
+                <p style="text-align: center; font-size: 1.2em;">The Open Animation allows you to add drawings to a larger animation</p>
+                <p style="text-align: center; font-size: 1.2em;">You can see the current animation by going to the "Video Player" tab</p>
+                <br><br><br>
+                <p>Steps to add a drawing to the animation:</p>
+                <ul>
+                    <li>Go to the "Canvas" tab</li>
+                    <li>Draw a picture that fits in with the soundtrack</li>
+                    <li>Click "Upload"</li>
+                    <li>Input the video time where you want your drawing to be inserted</li>
+                    <li>Go to the Video Player tab and you will see that your picture has been added to the video</li>
+                </ul>
+            </div>
         </div>
     </div>
     

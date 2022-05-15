@@ -7,10 +7,45 @@
     margin: auto;
 }
 
+[hidden] {
+    display: none !important;
+  }
+
+.spacer-top {
+    display: flex;
+    width: 30%;
+    height: 7em;
+    margin: auto;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.canvas-tool {
+    display: flex;
+    justify-content: center;
+    border: 1px solid black;
+    border-radius: 1em;
+    height: 50%;
+    width: 5em;
+    padding: 0.5em 0;
+    align-items: center;
+    border-radius: 20em;
+    background-color: rgba(13, 29, 207, 0.048);
+    border: 0.15em solid rgba(9, 17, 116, 0.185);  
+}
+
+.canvas-tool:hover {
+    background-color: rgba(41, 169, 255, 0.473)!important;
+    cursor: pointer;
+}
+
+.canvas-tool fa-icon {
+    height: 3em;
+}
+
 .app-container {
-    font-size: 1.5em;
+    font-size: 2em;
     line-height: 1.2;
-    margin-top: 3em;
     background-color: white;
     width: 100%;
     height: 75vh;
@@ -23,23 +58,30 @@
 }
 
 #instructions-container {
-    padding-top: 3em;
-    width: 80%;
+    display: flex;
+    justify-content: center;
+    width: 100%;
     height: 100%;
     margin: auto;
+    border: 1px solid black;
+    border-radius: 0.2em;
+}
+
+.text-container {
+    margin-top: 3em;
 }
 
 #instructions-container ul {
     width: 100%;
 }
 
-#canvas-container {
+.canvasEl {
     background-color: rgb(255, 255, 255);
     border: 1px solid black;
-    border-radius: 0.5em;
+    border-radius: 0.2em;
 }
 
-#canvas-container:hover {
+.canvasEl:hover {
     cursor: crosshair;
 }
 
@@ -63,8 +105,8 @@ button {
     padding: 0.8em 1em;
 }
 
-button:hover {
-    background-color: rgba(41, 169, 255, 0.473);
+.button-container button:hover {
+    background-color: rgba(41, 169, 255, 0.473)!important;
     cursor: pointer;
 }
 
