@@ -34,13 +34,27 @@
     border: 0.15em solid rgba(9, 17, 116, 0.185);  
 }
 
-.canvas-tool:hover {
-    background-color: rgba(41, 169, 255, 0.473)!important;
+.upload-tool {
+    display: flex;
+    justify-content: center;
+    border: 1px solid black;
+    border-radius: 1em;
+    height: 50%;
+    width: 5em;
+    padding: 0.5em 0;
+    align-items: center;
+    background-color: rgba(207, 100, 13, 0.096);
+    border: 0.15em solid rgba(207, 100, 13, 0.397);
+}
+
+.upload-tool:hover {
+    background-color: rgba(255, 115, 0, 0.384)!important;
     cursor: pointer;
 }
 
-.canvas-tool fa-icon {
-    height: 3em;
+.canvas-tool:hover {
+    background-color: rgba(41, 169, 255, 0.473)!important;
+    cursor: pointer;
 }
 
 .app-container {

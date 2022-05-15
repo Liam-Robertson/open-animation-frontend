@@ -1,11 +1,9 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
-import { fromEvent, Subscription } from 'rxjs';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { HomeService } from './home.service';
-import { pairwise, switchMap, takeUntil } from 'rxjs/operators';
 import { faEraser } from '@fortawesome/free-solid-svg-icons';
 import { faPaintBrush } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faUpload } from '@fortawesome/free-solid-svg-icons';
 
 interface Position {
   xPos: number;
@@ -32,10 +30,10 @@ export class HomeComponent implements OnInit {
   canvasBool: boolean = false;
   instructionsBool: boolean = false;
   initCanvasBool: boolean = false; 
-
   faEraser = faEraser;
   faPaintBrush = faPaintBrush;
   faTrash = faTrash;
+  faUpload = faUpload;
   canvasHeight = 700
   canvasWidth = 1535
   ctx!: CanvasRenderingContext2D;
@@ -59,6 +57,10 @@ export class HomeComponent implements OnInit {
       tapestryEl.src = window.URL.createObjectURL(tapestry)
       });    
     }
+
+  uploadSnippet() {
+    
+  }
 
   onMouseDown(event: MouseEvent) {
     this.isPainting = true;

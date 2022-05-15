@@ -1,13 +1,16 @@
 <div class="main-container">
     <div class="spacer-top">
         <div [hidden]="!canvasBool" class="canvas-tool" id="brush-tool" (click)="toggleBrushTool()">
-            <fa-icon [icon]="faPaintBrush" transform="grow-15 down-15"></fa-icon>
+            <fa-icon [icon]="faPaintBrush" transform="grow-15"></fa-icon>
         </div>
         <div [hidden]="!canvasBool" class="canvas-tool" id="eraser-tool" (click)="toggleEraserTool()">
-            <fa-icon [icon]="faEraser" transform="grow-20 down-15"></fa-icon>
+            <fa-icon [icon]="faEraser" transform="grow-20"></fa-icon>
         </div>
         <div [hidden]="!canvasBool" class="canvas-tool" id="trash-tool" (click)="toggleTrashTool()">
-            <fa-icon [icon]="faTrash" transform="grow-15 down-15"></fa-icon>
+            <fa-icon [icon]="faTrash" transform="grow-15"></fa-icon>
+        </div>
+        <div [hidden]="!canvasBool" class="upload-tool" (click)="uploadSnippet()">
+            <fa-icon [icon]="faUpload" transform="grow-15"></fa-icon>
         </div>
     </div>
     <div class="app-container">
