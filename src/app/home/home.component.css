@@ -44,7 +44,7 @@
     padding: 0.5em 0;
     align-items: center;
     background-color: rgba(207, 100, 13, 0.096);
-    border: 0.15em solid rgba(207, 100, 13, 0.397);
+    border: 0.15em solid rgba(207, 100, 13, 0.315);
 }
 
 .upload-tool:hover {

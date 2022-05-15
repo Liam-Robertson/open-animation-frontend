@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
 import { HomeService } from './home.service';
 import { faEraser } from '@fortawesome/free-solid-svg-icons';
 import { faPaintBrush } from '@fortawesome/free-solid-svg-icons';
@@ -19,6 +19,11 @@ interface Line {
   startPos: Position;
   endPos: Position;
 }
+
+export interface DialogData {
+  animal: 'panda' | 'unicorn' | 'lion';
+}
+
 @Component({
   selector: 'home',
   templateUrl: './home.component.html',
@@ -46,6 +51,7 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private homeService: HomeService,
+    // private dialog: MatDialog,
   ) { }
 
   async ngOnInit() {
@@ -59,7 +65,12 @@ export class HomeComponent implements OnInit {
     }
 
   uploadSnippet() {
-    
+    // this.dialog.open(UploadPopup, {
+    //   data: {
+    //     animal: 'panda',
+    //   },
+    // });
+
   }
 
   onMouseDown(event: MouseEvent) {
