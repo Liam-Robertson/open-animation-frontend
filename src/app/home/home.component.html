@@ -11,7 +11,7 @@
         </div>
     </div>
     <div class="app-container">
-        <div [hidden]="!canvasBool" class="canvas-container">
+        <div [hidden]="!initCanvasBool" class="canvas-container">
             <canvas class="canvasEl" 
                 (mousemove)="onMouseMove($event)" 
                 (mousedown)="onMouseDown($event)" 

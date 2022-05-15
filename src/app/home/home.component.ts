@@ -28,35 +28,36 @@ interface Line {
 })
 export class HomeComponent implements OnInit {
   @ViewChild('canvasEl') canvasEl!: ElementRef;
-  videoBool: boolean = false;
+  videoBool: boolean = true;
   canvasBool: boolean = false;
   instructionsBool: boolean = false;
-  
+  initCanvasBool: boolean = false; 
+
   faEraser = faEraser;
   faPaintBrush = faPaintBrush;
   faTrash = faTrash;
   canvasHeight = 700
   canvasWidth = 1535
   ctx!: CanvasRenderingContext2D;
-  strokeStyle: string = '#000000';
+  strokeColour: string = '#000000';
   prevPos!: Position; 
   line: LineIncrement[] = [];
   isPainting = false;
   lineIncrement!: LineIncrement;
-  canvasLoadCounter!: number;
+  canvasLoadCounter: number = 0;
 
   constructor(
     private homeService: HomeService,
   ) { }
 
   async ngOnInit() {
-    this.toggleVideoPlayer()
+    (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
 
     this.homeService.getTapestry().subscribe((tapestry: Blob) => {
       const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
       tapestryEl.src = window.URL.createObjectURL(tapestry)
-    })
-  }
+      });    
+    }
 
   onMouseDown(event: MouseEvent) {
     this.isPainting = true;
@@ -89,13 +90,13 @@ export class HomeComponent implements OnInit {
         endPos: currentPos
       };
       this.line.push(this.lineIncrement);
-      this.draw(this.prevPos, currentPos, this.strokeStyle);
+      this.draw(this.prevPos, currentPos, this.strokeColour);
     }
   }
 
-  draw(prevPos: Position, currentPos: Position, strokeStyle: string) {
+  draw(prevPos: Position, currentPos: Position, strokeColour: string) {
     this.ctx.beginPath(); 
-    this.ctx.strokeStyle = strokeStyle;
+    this.ctx.strokeStyle = strokeColour;
     this.ctx.moveTo(prevPos.xPos, prevPos.yPos);
     this.ctx.lineTo(currentPos.xPos, currentPos.yPos);
     this.ctx.stroke();
@@ -116,8 +117,10 @@ export class HomeComponent implements OnInit {
       this.videoBool = false;
       (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      console.log(this.canvasLoadCounter);
 
       if (this.canvasLoadCounter != 1) {
+        this.initCanvasBool = true
         this.ctx = this.canvasEl.nativeElement.getContext('2d');
         this.canvasEl.nativeElement.height = this.canvasHeight.toString()
         this.canvasEl.nativeElement.width = this.canvasWidth.toString()
@@ -125,6 +128,8 @@ export class HomeComponent implements OnInit {
         this.ctx.lineCap = 'round'
         this.ctx.lineWidth = 5
         this.canvasLoadCounter += 1
+      } else {
+        this.ctx.canvas.hidden = false;
       }
     }
   }
@@ -134,6 +139,7 @@ export class HomeComponent implements OnInit {
         this.instructionsBool = true;
         (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
         this.canvasBool = false;
+        this.ctx.canvas.hidden = true;
         this.videoBool = false;
         (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
         (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
@@ -143,30 +149,33 @@ export class HomeComponent implements OnInit {
   toggleVideoPlayer() {
     if (!this.videoBool) {
       this.videoBool = true;
+      this.canvasBool = false;
       (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
       this.instructionsBool = false;
-      this.canvasBool = false;
+      this.ctx.canvas.hidden = true;
       (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-    }
+    };
   }
 
   toggleBrushTool() {
     (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
     (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
     (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    this.ctx.lineWidth = 5
+    this.strokeColour = '#000000';
   }
 
   toggleEraserTool() {
     (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
     (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
     (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    this.ctx.lineWidth = 20
+    this.strokeColour = '#FFFFFF';
   }
 
   toggleTrashTool() {
-    (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-    (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-    (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+    this.ctx.clearRect(0, 0, this.canvasEl.nativeElement.width, this.canvasEl.nativeElement.height);
   }
 
   getPositionFromEvent(event: MouseEvent) {
