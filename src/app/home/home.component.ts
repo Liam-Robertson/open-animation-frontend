@@ -5,6 +5,7 @@ import { faPaintBrush } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import { MatDialog } from '@angular/material/dialog';
+import { UploadPopupComponent } from './upload-popup/upload-popup.component';
 
 interface Position {
   xPos: number;
@@ -19,10 +20,6 @@ interface LineIncrement {
 interface Line {
   startPos: Position;
   endPos: Position;
-}
-
-export interface DialogData {
-  animal: 'panda' | 'unicorn' | 'lion';
 }
 
 @Component({
@@ -66,10 +63,7 @@ export class HomeComponent implements OnInit {
     }
 
   uploadSnippet() {
-    this.dialog.open(UploadPopup, {
-      data: {
-        animal: 'panda',
-      },
+    this.dialog.open(UploadPopupComponent, {
     });
   }
 
@@ -203,8 +197,8 @@ export class HomeComponent implements OnInit {
 
 }
 
-@Component({
-  selector: 'upload-popup',
-  templateUrl: 'upload-popup.html',
-})
-export class UploadPopup {}
+// @Component({
+//   selector: 'upload-popup',
+//   templateUrl: 'upload-popup.html',
+// })
+// export class UploadPopup {}
