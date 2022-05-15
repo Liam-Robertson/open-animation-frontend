@@ -4,6 +4,7 @@ import { faEraser } from '@fortawesome/free-solid-svg-icons';
 import { faPaintBrush } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
+import { MatDialog } from '@angular/material/dialog';
 
 interface Position {
   xPos: number;
@@ -51,7 +52,7 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private homeService: HomeService,
-    // private dialog: MatDialog,
+    private dialog: MatDialog,
   ) { }
 
   async ngOnInit() {
@@ -65,12 +66,11 @@ export class HomeComponent implements OnInit {
     }
 
   uploadSnippet() {
-    // this.dialog.open(UploadPopup, {
-    //   data: {
-    //     animal: 'panda',
-    //   },
-    // });
-
+    this.dialog.open(UploadPopup, {
+      data: {
+        animal: 'panda',
+      },
+    });
   }
 
   onMouseDown(event: MouseEvent) {
@@ -202,3 +202,9 @@ export class HomeComponent implements OnInit {
   }
 
 }
+
+@Component({
+  selector: 'upload-popup',
+  templateUrl: 'upload-popup.html',
+})
+export class UploadPopup {}
