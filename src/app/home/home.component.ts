@@ -52,6 +52,7 @@ export class HomeComponent implements OnInit {
 
   async ngOnInit() {
     (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+    (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
 
     this.homeService.getTapestry().subscribe((tapestry: Blob) => {
       const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
@@ -110,9 +111,9 @@ export class HomeComponent implements OnInit {
     if (!this.canvasBool) {
       this.canvasBool = true;
       (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
-      (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
-      (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-      (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      // (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+      // (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      // (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       this.instructionsBool = false;
       this.videoBool = false;
       (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
@@ -170,7 +171,7 @@ export class HomeComponent implements OnInit {
     (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
     (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
     (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-    this.ctx.lineWidth = 20
+    this.ctx.lineWidth = 25
     this.strokeColour = '#FFFFFF';
   }
 
