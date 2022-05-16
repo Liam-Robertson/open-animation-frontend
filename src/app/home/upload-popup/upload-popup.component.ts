@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-upload-popup',
@@ -13,12 +13,14 @@ export class UploadPopupComponent implements OnInit {
   ngOnInit(): void {
   }
 
-  myForm = this.formBuilder.group({
-    deposit: ['', [
-      Validators.required, // Validators
-      Validators.min(1),
-      Validators.max(1000000)
-    ]],
+  formGroup = new FormGroup({
+    startTime: new FormControl(new Time(0, 0)),
+    lastName: new FormControl(''),
   });
+  
 
+}
+
+export class Time {
+  constructor(public minutes: number, public seconds: number) {}
 }

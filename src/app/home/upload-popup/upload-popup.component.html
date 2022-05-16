@@ -1,11 +1,17 @@
-<div mat-dialog-content>Enter the video time where you want your drawing to be inserted:</div>
-<form [formGroup]="myForm">
-    <mat-form-field appearance="outline">
-    <mat-label>Start Time</mat-label>
-    <input matInput formControlName="deposit" type="number">
+<h2 mat-dialog-content>Enter the video time where you want your drawing to be inserted</h2>
+<br>
+<form class="timestamp-input" [formGroup]="formGroup">
+  <mat-form-field appearance="outline">
+    <mat-label required>Start Time</mat-label>
+    <input matInput type="time">
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label required>End Time</mat-label>
+    <input matInput type="time">
   </mat-form-field>
 </form>
 
-<div mat-dialog-actions>
-    <button [disabled]="myForm.invalid" mat-dialog-close>Close</button>
+<div class="timestamp-submit" mat-dialog-actions>
+    <button mat-button mat-dialog-close>Close</button>
+    <button [disabled]="formGroup.invalid" mat-dialog-close>Submit</button>
 </div>

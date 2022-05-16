@@ -196,9 +196,3 @@ export class HomeComponent implements OnInit {
   }
 
 }
-
-// @Component({
-//   selector: 'upload-popup',
-//   templateUrl: 'upload-popup.html',
-// })
-// export class UploadPopup {}

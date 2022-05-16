@@ -1,0 +1,31 @@
+.timestamp-input {
+    display: flex;
+    flex-direction: column;
+}
+
+.timestamp-submit {
+    display: flex;
+    width: 100%;
+    margin: auto;
+    justify-content: center;
+}
+
+.timestamp-submit button {
+    padding: 0.5em 1em;
+    margin: 0 2em;
+    display: flex;
+    font-size: 1.3em;
+    justify-content: center;
+    border: 1px solid black;
+    border-radius: 1em;
+    align-items: center;
+    border-radius: 20em;
+    background-color: rgba(13, 29, 207, 0.048);
+    border: 0.15em solid rgba(9, 17, 116, 0.185); 
+}
+
+.timestamp-submit button:hover {
+    background-color: rgba(41, 169, 255, 0.473)!important;
+    cursor: pointer;
+}
+
