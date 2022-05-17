@@ -22,6 +22,16 @@ export class HomeService {
     return this.http.get(environment.env + "getTapestry", {'headers': headers, responseType: 'blob'})
   }
 
+  postImage(): Observable<any> {
+    const headers = new HttpHeaders({Authorization: 'Basic ' + btoa(`${user.username}:${user.password}`)})
+    return this.http.get(environment.env + "getTapestry", {'headers': headers, responseType: 'blob'})
+  }
+
+  postImageMetadata(): Observable<any> {
+    const headers = new HttpHeaders({Authorization: 'Basic ' + btoa(`${user.username}:${user.password}`)})
+    return this.http.get(environment.env + "getTapestry", {'headers': headers, responseType: 'blob'})
+  }
+
   errorHandler(error: HttpErrorResponse) {
     const myReader = new FileReader();
     myReader.onload = function (event) {

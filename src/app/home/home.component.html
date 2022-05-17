@@ -1,4 +1,4 @@
-<div class="main-container">
+<div [hidden]="loading" class="main-container">
     <div class="spacer-top">
         <div [hidden]="!canvasBool" class="canvas-tool" id="brush-tool" (click)="toggleBrushTool()">
             <fa-icon [icon]="faPaintBrush" transform="grow-15"></fa-icon>
@@ -56,4 +56,8 @@
             <div>Instructions</div>
         </button> 
     </div>
+</div>
+<div *ngIf="loading" class="loading">
+    <p>Loading</p>
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
 </div>

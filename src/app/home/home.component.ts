@@ -6,6 +6,7 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import { MatDialog } from '@angular/material/dialog';
 import { UploadPopupComponent } from './upload-popup/upload-popup.component';
+import { Snippet } from './home.model';
 
 interface Position {
   xPos: number;
@@ -46,6 +47,9 @@ export class HomeComponent implements OnInit {
   isPainting = false;
   lineIncrement!: LineIncrement;
   canvasLoadCounter: number = 0;
+  endTime!: number;
+  startTime!: number;
+  loading: boolean = false;
 
   constructor(
     private homeService: HomeService,
@@ -63,7 +67,20 @@ export class HomeComponent implements OnInit {
     }
 
   uploadSnippet() {
-    this.dialog.open(UploadPopupComponent, {
+    const dialogRef = this.dialog.open(UploadPopupComponent, {
+      data: {name: this.startTime, animal: this.endTime},
+    });
+
+    dialogRef.afterClosed().subscribe(response => {
+      const snippetOut: Snippet = {
+        startTime: response.startTime,
+        endTime: response.startTime,
+      }
+      this.loading = true;
+      this.homeService.postImage
+      this.homeService.postImageMetadata
+      this.loading = false;
+      console.log(snippetOut);
     });
   }
 
@@ -122,7 +139,6 @@ export class HomeComponent implements OnInit {
       this.videoBool = false;
       (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-      console.log(this.canvasLoadCounter);
 
       if (this.canvasLoadCounter != 1) {
         this.initCanvasBool = true
