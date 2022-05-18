@@ -72,13 +72,18 @@ export class HomeComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(response => {
+      // const image = this.canvasEl.nativeElement.toDataURL("image/png").replace("image/png", "image/octet-stream");
+      const image = this.canvasEl.nativeElement.toDataURL();
+
       const snippetOut: Snippet = {
         startTime: response.startTime,
-        endTime: response.startTime,
+        endTime: response.endTime,
+        image: image
       }
       this.loading = true;
-      this.homeService.postImage
-      this.homeService.postImageMetadata
+      this.homeService.uploadSnippet(snippetOut).subscribe((response: any) => {
+        alert(response)
+      })
       this.loading = false;
       console.log(snippetOut);
     });
