@@ -41,7 +41,7 @@ export class HomeComponent implements OnInit {
   canvasHeight = 700
   canvasWidth = 1535
   ctx!: CanvasRenderingContext2D;
-  strokeColour: string = '#000000';
+  strokeColour: string = 'black';
   prevPos!: Position; 
   line: LineIncrement[] = [];
   isPainting = false;
@@ -137,26 +137,28 @@ export class HomeComponent implements OnInit {
   }
 
   toggleCanvas() {
-    if (!this.canvasBool) {
-      this.canvasBool = true;
-      (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+    if (!this.initCanvasBool) {
+      this.initCanvasBool = true;
       this.instructionsBool = false;
       this.videoBool = false;
-      (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      this.canvasBool = true;
+      (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
       (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
 
-      if (this.canvasLoadCounter != 1) {
-        this.initCanvasBool = true
-        this.ctx = this.canvasEl.nativeElement.getContext('2d');
-        this.canvasEl.nativeElement.height = this.canvasHeight.toString()
-        this.canvasEl.nativeElement.width = this.canvasWidth.toString()
-        this.ctx.lineJoin = 'round'
-        this.ctx.lineCap = 'round'
-        this.ctx.lineWidth = 5
-        this.canvasLoadCounter += 1
-      } else {
-        this.ctx.canvas.hidden = false;
-      }
+      this.ctx = this.canvasEl.nativeElement.getContext('2d');
+      this.canvasEl.nativeElement.height = this.canvasHeight.toString();
+      this.canvasEl.nativeElement.width = this.canvasWidth.toString();  
+      this.ctx.fillStyle = '#F0FFFF';
+      this.ctx.fillRect(0, 0, this.canvasWidth,  this.canvasHeight);
+      this.ctx.lineJoin = 'round'
+      this.ctx.lineCap = 'round';
+      this.ctx.lineWidth = 5;
+    } else {
+      this.ctx.canvas.hidden = false;
+      this.instructionsBool = false;
+      this.videoBool = false;
+      this.canvasBool = true;
     }
   }
 
