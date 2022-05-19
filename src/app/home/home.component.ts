@@ -68,11 +68,11 @@ export class HomeComponent implements OnInit {
 
   uploadSnippet() {
     const dialogRef = this.dialog.open(UploadPopupComponent, {
-      data: {name: this.startTime, animal: this.endTime},
+      data: {startTime: this.startTime, endTime: this.endTime},
     });
 
     dialogRef.afterClosed().subscribe(response => {
-      // const image = this.canvasEl.nativeElement.toDataURL("image/png").replace("image/png", "image/octet-stream");
+      this.loading = true;
       const image = this.canvasEl.nativeElement.toDataURL();
 
       const snippetOut: Snippet = {
@@ -80,12 +80,11 @@ export class HomeComponent implements OnInit {
         endTime: response.endTime,
         image: image
       }
-      this.loading = true;
+      
       this.homeService.uploadSnippet(snippetOut).subscribe((response: any) => {
-        alert(response)
+        alert(response) 
+        window.location.reload();
       })
-      this.loading = false;
-      console.log(snippetOut);
     });
   }
 
