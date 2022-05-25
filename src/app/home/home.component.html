@@ -40,6 +40,15 @@
                 </ul>
             </div>
         </div>
+        <div [hidden]="!feedbackBool" id="feedback-container">
+            <div class="text-container">
+                <p style="text-align: center; font-size: 1.2em;">I read these comments regularly and update the code based on them so if you have ideas for what could make it better please leave them below</p>
+                <br><br><br>
+                <div *ngFor="let comment of commentary">
+                    <p>{{ comment }}</p>
+                </div>
+            </div>
+        </div>
     </div>
     
     <div class="button-container">
@@ -54,6 +63,10 @@
         <button id="instructions-button" mat-raised-button color="primary" type="button" (click)="toggleInstructions()">
             <mat-icon>info</mat-icon>
             <div>Instructions</div>
+        </button> 
+        <button id="feedback-button" mat-raised-button color="primary" type="button" (click)="toggleFeedback()">
+            <mat-icon>question_answer</mat-icon>
+            <div>Feedback</div>
         </button> 
     </div>
 </div>

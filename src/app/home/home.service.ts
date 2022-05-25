@@ -1,10 +1,11 @@
 import { Injectable, OnInit } from '@angular/core';
 import { lastValueFrom, Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import user from '../key.json';
-import { Snippet } from './home.model';
+import { Snippet } from './models/Snippet.model';
+import { Commentary } from './models/Commentary.model';
 
 @Injectable({
   providedIn: 'root'
@@ -19,8 +20,17 @@ export class HomeService {
   }
 
   getTapestry(): Observable<any> {
-    const headers = new HttpHeaders({Authorization: 'Basic ' + btoa(`${user.username}:${user.password}`)})
-    return this.http.get(environment.env + "getTapestry", {'headers': headers, responseType: 'blob'})
+    return this.http.get(environment.env + "getTapestry", {responseType: "text"})
+  }
+
+  getAllComments(): Observable<Commentary[]> {
+    return this.http.get(environment.env + "getAllCommentary", {responseType: "json"})
+      .pipe(map((res: any) => res))
+  }
+
+  saveComment(comment: string): Observable<any> {
+    return this.http.post(environment.env + "saveCommentary", comment, {responseType: "text"})
+    .pipe(catchError(this.errorHandler));
   }
 
   uploadSnippet(snippetOut: Snippet): Observable<string> {

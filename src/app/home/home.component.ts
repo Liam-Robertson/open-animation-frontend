@@ -6,7 +6,8 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import { MatDialog } from '@angular/material/dialog';
 import { UploadPopupComponent } from './upload-popup/upload-popup.component';
-import { Snippet } from './home.model';
+import { lastValueFrom } from 'rxjs';
+import { Snippet } from './models/Snippet.model';
 
 interface Position {
   xPos: number;
@@ -32,6 +33,7 @@ export class HomeComponent implements OnInit {
   @ViewChild('canvasEl') canvasEl!: ElementRef;
   videoBool: boolean = true;
   canvasBool: boolean = false;
+  feedbackBool: boolean = false;
   instructionsBool: boolean = false;
   initCanvasBool: boolean = false; 
   faEraser = faEraser;
@@ -50,6 +52,7 @@ export class HomeComponent implements OnInit {
   endTime!: number;
   startTime!: number;
   loading: boolean = false;
+  commentary!: string[]
 
   constructor(
     private homeService: HomeService,
@@ -57,13 +60,16 @@ export class HomeComponent implements OnInit {
   ) { }
 
   async ngOnInit() {
+    this.commentary = (await lastValueFrom(this.homeService.getAllComments())).map(row => row.comment).reverse();
+    console.log(this.commentary);
+    
     (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
     (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
 
     this.homeService.getTapestry().subscribe((tapestry: Blob) => {
       const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
       tapestryEl.src = window.URL.createObjectURL(tapestry)
-      });    
+      });
     }
 
   uploadSnippet() {
@@ -144,6 +150,7 @@ export class HomeComponent implements OnInit {
       (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
       (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      (document.getElementById("feedback-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
 
       this.ctx = this.canvasEl.nativeElement.getContext('2d');
       this.canvasEl.nativeElement.height = this.canvasHeight.toString();
@@ -170,6 +177,7 @@ export class HomeComponent implements OnInit {
         this.videoBool = false;
         (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
         (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+        (document.getElementById("feedback-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       }
   }
 
@@ -182,7 +190,22 @@ export class HomeComponent implements OnInit {
       this.ctx.canvas.hidden = true;
       (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      (document.getElementById("feedback-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
     };
+  }
+
+  toggleFeedback() {
+    if (!this.feedbackBool) {
+      this.feedbackBool = true;
+      this.videoBool = false;
+      this.canvasBool = false;
+      this.instructionsBool = false;
+      this.ctx.canvas.hidden = true;
+      (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      (document.getElementById("feedback-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+    }
   }
 
   toggleBrushTool() {
