@@ -42,11 +42,22 @@
         </div>
         <div [hidden]="!feedbackBool" id="feedback-container">
             <div class="text-container">
-                <p style="text-align: center; font-size: 1.2em;">I read these comments regularly and update the code based on them so if you have ideas for what could make it better please leave them below</p>
-                <br><br><br>
-                <div *ngFor="let comment of commentary">
+                <div class="comment-header">
+                    <p>Author's Note:</p>
+                    <p>I'd like to make this app as good as possible so if you have any feedback or suggestions please leave them below</p>
+                </div>
+                <br>
+                <div *ngFor="let comment of commentary" id="comments" style="font-size: 0.7em;">
                     <p>{{ comment }}</p>
                 </div>
+            </div>
+            <div class="comment-form-container">
+                <div class="comment-input-container">
+                    <input class="comment-form" type="text" [(ngModel)]="currentComment" placeholder="Aa">
+                </div>
+                <button class="comment-button" (click)="submitCommentary()">
+                    <fa-icon [icon]="faComment" transform="grow-15"></fa-icon>
+                </button>
             </div>
         </div>
     </div>

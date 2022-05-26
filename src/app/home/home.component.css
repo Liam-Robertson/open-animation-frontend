@@ -97,7 +97,7 @@ mat-progress-bar {
     border-radius: 0.2em;
 }
 
-.text-container {
+#instructions-container .text-container {
     margin-top: 3em;
 }
 
@@ -113,6 +113,74 @@ mat-progress-bar {
 
 .canvasEl:hover {
     cursor: crosshair;
+}
+
+#feedback-container .text-container {
+    overflow-y: scroll;
+    height: 85%;
+}
+
+.comment-form-container {
+    display: flex;
+    height: 15%;
+    width: 90%;
+    align-items: center;
+    justify-content: center;
+}
+
+.comment-input-container {
+    width: 70%;
+    height: 40%;
+    margin: 0 2em 0 0;
+    padding: 0;
+}
+
+.comment-form {
+    border: 1px solid rgba(0, 0, 0, 0.404);
+    padding-left: 1em;
+    font-size: 0.8em;
+    height: 100%;
+    background-color: rgba(97, 97, 97, 0.096);
+    border-radius: 3em;
+    width: 100%;
+}
+
+.comment-button {
+    width: 4em;
+    justify-content: center;
+    background-color: rgba(13, 29, 207, 0.048);
+}
+
+.comment-button:hover {
+    width: 4em;
+    justify-content: center;
+    background-color: rgba(41, 169, 255, 0.473);
+}
+
+#feedback-container {
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid black;
+    border-radius: 0.2em;
+}
+
+#comments {
+    width: 95%;
+    background-color: rgba(13, 29, 207, 0.048);
+    padding: 0.3em 0.5em 0.025em 0.5em;
+    margin: 0.5em auto;
+    border-radius: 0.2em;
+}   
+
+.comment-header {
+    text-align: left;
+    width: 90%;
+    line-height: 1.2;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: rgba(13, 29, 207, 0.048);
+    padding: 1em;
+    border-radius: 0.2em;
+    margin: auto;
 }
 
 /* ///////////////////////////////////////////////////////////////////// */

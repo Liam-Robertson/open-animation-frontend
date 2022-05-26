@@ -3,6 +3,7 @@ import { HomeService } from './home.service';
 import { faEraser } from '@fortawesome/free-solid-svg-icons';
 import { faPaintBrush } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCommenting } from '@fortawesome/free-solid-svg-icons';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import { MatDialog } from '@angular/material/dialog';
 import { UploadPopupComponent } from './upload-popup/upload-popup.component';
@@ -39,6 +40,7 @@ export class HomeComponent implements OnInit {
   faEraser = faEraser;
   faPaintBrush = faPaintBrush;
   faTrash = faTrash;
+  faComment = faCommenting;
   faUpload = faUpload;
   canvasHeight = 700
   canvasWidth = 1535
@@ -53,6 +55,7 @@ export class HomeComponent implements OnInit {
   startTime!: number;
   loading: boolean = false;
   commentary!: string[]
+  currentComment!: string;
 
   constructor(
     private homeService: HomeService,
@@ -92,6 +95,13 @@ export class HomeComponent implements OnInit {
         window.location.reload();
       })
     });
+  }
+
+  submitCommentary() {
+    this.homeService.saveComment(this.currentComment).subscribe((response: any) => {
+      alert(response) 
+      window.location.reload();
+    })
   }
 
   onMouseDown(event: MouseEvent) {
@@ -147,6 +157,7 @@ export class HomeComponent implements OnInit {
       this.instructionsBool = false;
       this.videoBool = false;
       this.canvasBool = true;
+      this.feedbackBool = false;
       (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
       (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
@@ -164,6 +175,7 @@ export class HomeComponent implements OnInit {
       this.ctx.canvas.hidden = false;
       this.instructionsBool = false;
       this.videoBool = false;
+      this.feedbackBool = false;
       this.canvasBool = true;
     }
   }
@@ -174,6 +186,7 @@ export class HomeComponent implements OnInit {
         (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
         this.canvasBool = false;
         this.ctx.canvas.hidden = true;
+        this.feedbackBool = false;
         this.videoBool = false;
         (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
         (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
@@ -187,6 +200,7 @@ export class HomeComponent implements OnInit {
       this.canvasBool = false;
       (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
       this.instructionsBool = false;
+      this.feedbackBool = false;
       this.ctx.canvas.hidden = true;
       (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
       (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
