@@ -9,11 +9,12 @@ import { HomeComponent } from '../home.component';
   styleUrls: ['./upload-popup.component.css']
 })
 export class UploadPopupComponent implements OnInit {
+  submitBoolean!: boolean;
 
   constructor(
     private formBuilder: FormBuilder,
     public dialogRef: MatDialogRef<UploadPopupComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: HomeComponent,) { }
+    @Inject(MAT_DIALOG_DATA) public data: HomeComponent) { }
 
   ngOnInit(): void {
   }
@@ -22,11 +23,6 @@ export class UploadPopupComponent implements OnInit {
     startTime: new FormControl(),
     lastName: new FormControl(),
   });
-
-  popupSubmit() {
-
-  }
-  
 
 }
 

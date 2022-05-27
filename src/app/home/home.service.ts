@@ -20,7 +20,7 @@ export class HomeService {
   }
 
   getTapestry(): Observable<any> {
-    return this.http.get(environment.env + "getTapestry", {responseType: "text"})
+    return this.http.get(environment.env + "getTapestry", {responseType: "blob"})
   }
 
   getAllComments(): Observable<Commentary[]> {

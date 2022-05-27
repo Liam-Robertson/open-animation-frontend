@@ -64,8 +64,6 @@ export class HomeComponent implements OnInit {
 
   async ngOnInit() {
     this.commentary = (await lastValueFrom(this.homeService.getAllComments())).map(row => row.comment).reverse();
-    console.log(this.commentary);
-    
     (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
     (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
 
@@ -77,36 +75,34 @@ export class HomeComponent implements OnInit {
 
   uploadSnippet() {
     const dialogRef = this.dialog.open(UploadPopupComponent, {
-      data: {startTime: this.startTime, endTime: this.endTime},
+      data: {startTime: this.startTime, endTime: this.endTime, submitBool: false},
     });
 
     dialogRef.afterClosed().subscribe(response => {
-      this.loading = true;
-      const image = this.canvasEl.nativeElement.toDataURL();
 
-      const snippetOut: Snippet = {
-        startTime: response.startTime,
-        endTime: response.endTime,
-        image: image
+      if (response != null) {
+        this.loading = true;
+        const image = this.canvasEl.nativeElement.toDataURL();
+  
+        const snippetOut: Snippet = {
+          startTime: response.startTime,
+          endTime: response.endTime,
+          image: image
+        }
+        
+        this.homeService.uploadSnippet(snippetOut).subscribe((response: any) => {
+          alert(response) 
+          window.location.reload();
+        })
       }
-      
-      this.homeService.uploadSnippet(snippetOut).subscribe((response: any) => {
-        alert(response) 
-        window.location.reload();
-      })
     });
-  }
+  } 
 
   submitCommentary() {
     this.homeService.saveComment(this.currentComment).subscribe((response: any) => {
       alert(response) 
       window.location.reload();
     })
-  }
-
-  onMouseDown(event: MouseEvent) {
-    this.isPainting = true;
-    this.prevPos = this.getPositionFromEvent(event)
   }
 
   onMouseUp() {
@@ -127,7 +123,12 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  onMouseMove(event: MouseEvent) {
+  onMouseDown(event: any) {
+    this.isPainting = true;
+    this.prevPos = this.getPositionFromEvent(event)
+  }
+
+  onMouseMove(event: any) {
     if (this.isPainting) {
       const currentPos: Position = this.getPositionFromEvent(event)
       this.lineIncrement = {
@@ -136,6 +137,28 @@ export class HomeComponent implements OnInit {
       };
       this.line.push(this.lineIncrement);
       this.draw(this.prevPos, currentPos, this.strokeColour);
+    }
+  }
+
+  onTouchStart(event: TouchEvent) {
+    if (event.target == document.getElementById("canvasId")) {
+      event.preventDefault();
+    }
+    const touch = event.touches[0]
+    this.onMouseDown(touch)
+  }
+
+  onTouchMove(event: TouchEvent) {
+    if (event.target == document.getElementById("canvasId")) {
+      event.preventDefault();
+    }
+    const touch = event.touches[0]
+    this.onMouseMove(touch)
+  }
+
+  onTouchEnd() {
+    if (this.isPainting) {
+      this.isPainting = false;
     }
   }
 
@@ -166,7 +189,7 @@ export class HomeComponent implements OnInit {
       this.ctx = this.canvasEl.nativeElement.getContext('2d');
       this.canvasEl.nativeElement.height = this.canvasHeight.toString();
       this.canvasEl.nativeElement.width = this.canvasWidth.toString();  
-      this.ctx.fillStyle = '#F0FFFF';
+      this.ctx.fillStyle = 'white';
       this.ctx.fillRect(0, 0, this.canvasWidth,  this.canvasHeight);
       this.ctx.lineJoin = 'round'
       this.ctx.lineCap = 'round';
@@ -239,7 +262,8 @@ export class HomeComponent implements OnInit {
   }
 
   toggleTrashTool() {
-    this.ctx.clearRect(0, 0, this.canvasEl.nativeElement.width, this.canvasEl.nativeElement.height);
+    this.ctx.fillStyle = 'white';
+    this.ctx.fillRect(0, 0, this.canvasWidth,  this.canvasHeight);
   }
 
   getPositionFromEvent(event: MouseEvent) {

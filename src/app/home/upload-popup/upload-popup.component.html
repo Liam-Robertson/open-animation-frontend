@@ -12,6 +12,6 @@
 </div>
 
 <div class="timestamp-submit" mat-dialog-actions>
-    <button mat-button mat-dialog-close>Close</button>
-    <button [disabled]="formGroup.invalid"  [mat-dialog-close]="data" click="popupSubmit()">Submit</button>
+    <button mat-button [mat-dialog-close]="null">Close</button>
+    <button [mat-dialog-close]="data">Submit</button>
 </div>
