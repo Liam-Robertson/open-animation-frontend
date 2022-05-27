@@ -71,6 +71,7 @@ export class HomeComponent implements OnInit {
       const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
       tapestryEl.src = window.URL.createObjectURL(tapestry)
       });
+      this.ctx = this.canvasEl.nativeElement.getContext('2d');
     }
 
   uploadSnippet() {
@@ -208,6 +209,7 @@ export class HomeComponent implements OnInit {
         this.instructionsBool = true;
         (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
         this.canvasBool = false;
+        this.initCanvasBool = false;
         this.ctx.canvas.hidden = true;
         this.feedbackBool = false;
         this.videoBool = false;
@@ -221,6 +223,7 @@ export class HomeComponent implements OnInit {
     if (!this.videoBool) {
       this.videoBool = true;
       this.canvasBool = false;
+      this.initCanvasBool = false;
       (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
       this.instructionsBool = false;
       this.feedbackBool = false;
@@ -236,6 +239,7 @@ export class HomeComponent implements OnInit {
       this.feedbackBool = true;
       this.videoBool = false;
       this.canvasBool = false;
+      this.initCanvasBool = false;
       this.instructionsBool = false;
       this.ctx.canvas.hidden = true;
       (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
