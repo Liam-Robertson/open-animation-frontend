@@ -5,6 +5,10 @@ import { faPaintBrush } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { faCommenting } from '@fortawesome/free-solid-svg-icons';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faFilm } from '@fortawesome/free-solid-svg-icons';
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
+import { faComments } from '@fortawesome/free-solid-svg-icons';
 import { MatDialog } from '@angular/material/dialog';
 import { UploadPopupComponent } from './upload-popup/upload-popup.component';
 import { lastValueFrom } from 'rxjs';
@@ -31,19 +35,22 @@ interface Line {
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
+  faEraser = faEraser;
+  faPaintBrush = faPaintBrush;
+  faTrash = faTrash;
+  faComment = faCommenting;
+  faUpload = faUpload;
+  faFilm = faFilm;
+  faPenToSquare = faPenToSquare;
+  faCircleInfo = faCircleInfo;
+  faComments = faComments;
+
   @ViewChild('canvasEl') canvasEl!: ElementRef;
   videoBool: boolean = true;
   canvasBool: boolean = false;
   feedbackBool: boolean = false;
   instructionsBool: boolean = false;
   initCanvasBool: boolean = false; 
-  faEraser = faEraser;
-  faPaintBrush = faPaintBrush;
-  faTrash = faTrash;
-  faComment = faCommenting;
-  faUpload = faUpload;
-  canvasHeight = 700
-  canvasWidth = 1535
   ctx!: CanvasRenderingContext2D;
   strokeColour: string = 'black';
   prevPos!: Position; 
@@ -188,10 +195,13 @@ export class HomeComponent implements OnInit {
       (document.getElementById("feedback-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
 
       this.ctx = this.canvasEl.nativeElement.getContext('2d');
-      this.canvasEl.nativeElement.height = this.canvasHeight.toString();
-      this.canvasEl.nativeElement.width = this.canvasWidth.toString();  
+      const containerWidth = document.getElementById("app-container")?.getBoundingClientRect().width
+      const containerHeight = document.getElementById("app-container")?.getBoundingClientRect().height
+      
+      this.canvasEl.nativeElement.width = containerWidth;
+      this.canvasEl.nativeElement.height = containerHeight;
       this.ctx.fillStyle = 'white';
-      this.ctx.fillRect(0, 0, this.canvasWidth,  this.canvasHeight);
+      this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
       this.ctx.lineJoin = 'round'
       this.ctx.lineCap = 'round';
       this.ctx.lineWidth = 5;
@@ -264,19 +274,28 @@ export class HomeComponent implements OnInit {
 
   toggleTrashTool() {
     this.ctx.fillStyle = 'white';
-    this.ctx.fillRect(0, 0, this.canvasWidth,  this.canvasHeight);
+    this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
   }
 
   getPositionFromEvent(event: MouseEvent) {
     const rect: DOMRect = this.canvasEl.nativeElement.getBoundingClientRect()
-    const canvasXPos = (event.clientX - rect.left) / rect.width * this.canvasWidth
-    const canvasYPos = (event.clientY - rect.top) / rect.height * this.canvasHeight
+    const canvasXPos = (event.clientX - rect.left) / rect.width * this.ctx.canvas.width
+    const canvasYPos = (event.clientY - rect.top) / rect.height * this.ctx.canvas.height
     
     const position: Position = {
       xPos: canvasXPos, 
       yPos: canvasYPos
     };
     return position
+  }
+
+  sleep(milliseconds: number) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+      if ((new Date().getTime() - start) > milliseconds){
+        break;
+      }
+    }
   }
 
 }

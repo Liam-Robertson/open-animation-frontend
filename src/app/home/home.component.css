@@ -15,6 +15,42 @@ mat-progress-bar {
     border-radius: 3em;
 }
 
+@media screen and (min-width: 1400px) {
+    .main-container {
+      font-size: 1em;
+    }
+
+    .button-container button {
+        font-size: 1.5em;
+    }
+  }
+
+  @media screen and (min-width: 601px) and (max-width: 1399px) {
+    .main-container {
+      font-size: 0.6em;
+    }
+
+    .button-container button {
+        font-size: 1.5em;
+    }
+  }
+  
+  @media screen and (max-width: 600px) {
+    .main-container {
+      font-size: 0.5em;
+    }
+
+    .button-container {
+        font-size: 1em;
+        flex-direction: column;
+    }
+
+    .button-container button {
+        margin-bottom: 1em;
+    }
+
+  }
+
 .main-container {
     padding: 0;
     width: 80vw;
@@ -23,16 +59,25 @@ mat-progress-bar {
     margin: auto;
 }
 
+button {
+    display: flex;
+    align-items: center;
+    border-radius: 2em;
+    background-color: rgba(13, 29, 207, 0.048);
+    border: 0.15em solid rgba(9, 17, 116, 0.185);  
+    padding: 0.8em 1em;
+}
+
 [hidden] {
     display: none !important;
   }
 
 .spacer-top {
     display: flex;
-    width: 30%;
+    width: 100%;
     height: 7em;
     margin: auto;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
@@ -43,6 +88,7 @@ mat-progress-bar {
     border-radius: 1em;
     height: 50%;
     width: 5em;
+    margin-right: 3em;
     padding: 0.5em 0;
     align-items: center;
     border-radius: 20em;
@@ -99,9 +145,10 @@ mat-progress-bar {
 
 #instructions-container .text-container {
     margin-top: 3em;
+    width: 90%;
 }
 
-#instructions-container ul {
+.canvas-container {
     width: 100%;
 }
 
@@ -193,14 +240,8 @@ mat-progress-bar {
     justify-content: space-evenly;
 }
 
-button {
-    display: flex;
-    font-size: large;
-    align-items: center;
-    border-radius: 2em;
-    background-color: rgba(13, 29, 207, 0.048);
-    border: 0.15em solid rgba(9, 17, 116, 0.185);  
-    padding: 0.8em 1em;
+.button-container button fa-icon {
+    margin-right: 1em;
 }
 
 .button-container button:hover {

@@ -13,8 +13,8 @@
             <fa-icon [icon]="faUpload" transform="grow-15"></fa-icon>
         </div>
     </div>
-    <div class="app-container">
-        <div [hidden]="!initCanvasBool" class="canvas-container">
+    <div class="app-container" id="app-container">
+        <div [hidden]="!initCanvasBool" class="canvas-container" id="canvas-container">
             <canvas class="canvasEl" id="canvasId"
                 (mousemove)="onMouseMove($event)" 
                 (mousedown)="onMouseDown($event)" 
@@ -67,19 +67,19 @@
     
     <div class="button-container">
         <button id="video-button" mat-raised-button color="primary" type="button" (hover)="true" (click)="toggleVideoPlayer()">
-            <mat-icon>video_library</mat-icon>
+            <fa-icon [icon]="faPaintBrush" transform="grow-2"></fa-icon>
             <div>Video Player</div>
         </button>
         <button id="canvas-button" mat-raised-button color="primary" type="button" (click)="toggleCanvas()">
-            <mat-icon>create</mat-icon>
+            <fa-icon [icon]="faPenToSquare" transform="grow-2"></fa-icon>
             <div>Canvas</div>
         </button>
         <button id="instructions-button" mat-raised-button color="primary" type="button" (click)="toggleInstructions()">
-            <mat-icon>info</mat-icon>
+            <fa-icon [icon]="faCircleInfo" transform="grow-2"></fa-icon>
             <div>Instructions</div>
         </button> 
         <button id="feedback-button" mat-raised-button color="primary" type="button" (click)="toggleFeedback()">
-            <mat-icon>question_answer</mat-icon>
+            <fa-icon [icon]="faComments" transform="grow-2"></fa-icon>
             <div>Feedback</div>
         </button> 
     </div>
