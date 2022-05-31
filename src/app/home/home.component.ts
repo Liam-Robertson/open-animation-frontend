@@ -15,21 +15,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { UploadPopupComponent } from './upload-popup/upload-popup.component';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { Snippet } from './models/Snippet.model';
-
-interface Position {
-  xPos: number;
-  yPos: number;
-}
-
-interface LineIncrement {
-  startPos: Position;
-  endPos: Position;
-}
-
-interface Line {
-  startPos: Position;
-  endPos: Position;
-}
+import { Position } from './models/Position.model';
+import { LineIncrement } from './models/LineIncrement.model';
 
 @Component({
   selector: 'home',
