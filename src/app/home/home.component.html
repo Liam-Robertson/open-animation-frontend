@@ -1,12 +1,18 @@
 <div [hidden]="loading" class="main-container">
     <div class="spacer-top">
-        <div [hidden]="!canvasBool" class="canvas-tool" id="brush-tool" (click)="toggleBrushTool()">
+        <div [hidden]="!canvasBool" class="canvas-tool" id="brush-button" (click)="toggleBrushTool()">
             <fa-icon [icon]="faPaintBrush" transform="grow-15"></fa-icon>
         </div>
-        <div [hidden]="!canvasBool" class="canvas-tool" id="eraser-tool" (click)="toggleEraserTool()">
+        <div [hidden]="!canvasBool" class="canvas-tool" id="pen-button" (click)="togglePenTool()">
+            <fa-icon [icon]="faPen" transform="grow-15"></fa-icon>
+        </div>
+        <div [hidden]="!canvasBool" class="canvas-tool" id="eraser-button" (click)="toggleEraserTool()">
             <fa-icon [icon]="faEraser" transform="grow-20"></fa-icon>
         </div>
-        <div [hidden]="!canvasBool" class="canvas-tool" id="trash-tool" (click)="toggleTrashTool()">
+        <div [hidden]="!canvasBool" class="canvas-tool" id="circle-button" (click)="toggleCircleTool()">
+            <fa-icon [icon]="faCircle" transform="grow-15"></fa-icon>
+        </div>
+        <div [hidden]="!canvasBool" class="canvas-tool" id="trash-button" (click)="toggleTrashTool()">
             <fa-icon [icon]="faTrash" transform="grow-15"></fa-icon>
         </div>
         <div [hidden]="!canvasBool" class="upload-tool" (click)="uploadSnippet()">
@@ -47,7 +53,7 @@
             <div class="text-container">
                 <div class="comment-header">
                     <p>Author's Note:</p>
-                    <p>I'd like to make this app as good as possible so if you have any feedback or suggestions please leave them below</p>
+                    <p>I'd like to make this app as good as possible so if you have any feedback or suggestions please type them in the box below or skype me at LiamOpenAnimation@gmail.com</p>
                 </div>
                 <br>
                 <div *ngFor="let comment of commentary" id="comments" style="font-size: 0.7em;">

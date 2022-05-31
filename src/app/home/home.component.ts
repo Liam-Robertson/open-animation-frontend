@@ -5,13 +5,15 @@ import { faPaintBrush } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { faCommenting } from '@fortawesome/free-solid-svg-icons';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faPenFancy } from '@fortawesome/free-solid-svg-icons';
 import { faFilm } from '@fortawesome/free-solid-svg-icons';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
+import { faCircle } from '@fortawesome/free-regular-svg-icons';
 import { faComments } from '@fortawesome/free-solid-svg-icons';
 import { MatDialog } from '@angular/material/dialog';
 import { UploadPopupComponent } from './upload-popup/upload-popup.component';
-import { lastValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { Snippet } from './models/Snippet.model';
 
 interface Position {
@@ -43,19 +45,44 @@ export class HomeComponent implements OnInit {
   faFilm = faFilm;
   faPenToSquare = faPenToSquare;
   faCircleInfo = faCircleInfo;
+  faCircle = faCircle;
   faComments = faComments;
+  faPen = faPenFancy;
 
-  @ViewChild('canvasEl') canvasEl!: ElementRef;
+  @ViewChild('canvasEl') canvasEl!: ElementRef<HTMLCanvasElement>;
+  ctx!: CanvasRenderingContext2D;
+
   videoBool: boolean = true;
   canvasBool: boolean = false;
   feedbackBool: boolean = false;
   instructionsBool: boolean = false;
   initCanvasBool: boolean = false; 
-  ctx!: CanvasRenderingContext2D;
-  strokeColour: string = 'black';
+
+  // Page buttons
+  videoButton!: HTMLButtonElement;
+  canvasButton!: HTMLButtonElement;
+  instructionsButton!: HTMLButtonElement;
+  feedbackButton!: HTMLButtonElement;
+  pageButtonList: HTMLButtonElement[] = []
+
+  // Canvas tool buttons
+  brushButton!: HTMLButtonElement;
+  penButton!: HTMLButtonElement;
+  circleButton!: HTMLButtonElement;
+  eraserButton!: HTMLButtonElement;
+  trashButton!: HTMLButtonElement;
+  canvasButtonList: HTMLButtonElement[] = []
+
+  brushToolBool: boolean = true;
+  circleToolBool: boolean = false;
+
+  standardColour: string = "rgba(13, 29, 207, 0.048)";
+  darkenColour: string = "rgba(41, 169, 255, 0.473)";
   prevPos!: Position; 
+  mouseDown!: Boolean;
+  currentPos!: Position;
+  isPainting: boolean = false;
   line: LineIncrement[] = [];
-  isPainting = false;
   lineIncrement!: LineIncrement;
   canvasLoadCounter: number = 0;
   endTime!: number;
@@ -70,16 +97,25 @@ export class HomeComponent implements OnInit {
   ) { }
 
   async ngOnInit() {
+
+    firstValueFrom(this.homeService.getWelcomeText())
+    this.intialiseVariables()
+    this.pageButtonList = [this.videoButton, this.canvasButton, this.instructionsButton, this.feedbackButton]
+    this.canvasButtonList = [this.brushButton, this.penButton, this.circleButton, this.eraserButton, this.trashButton]
+
     this.commentary = (await lastValueFrom(this.homeService.getAllComments())).map(row => row.comment).reverse();
-    (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
-    (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+    this.videoButton.style.background =  this.darkenColour;
+    this.brushButton.style.background =  this.darkenColour;
 
     this.homeService.getTapestry().subscribe((tapestry: Blob) => {
       const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
       tapestryEl.src = window.URL.createObjectURL(tapestry)
       });
-      this.ctx = this.canvasEl.nativeElement.getContext('2d');
     }
+
+// ##################################
+// User Upload Actions
+// ##################################
 
   uploadSnippet() {
     const dialogRef = this.dialog.open(UploadPopupComponent, {
@@ -113,6 +149,10 @@ export class HomeComponent implements OnInit {
     })
   }
 
+// ##################################
+// Mouse Actions
+// ##################################
+
   onMouseUp() {
     if (this.isPainting) {
       this.isPainting = false;
@@ -138,18 +178,20 @@ export class HomeComponent implements OnInit {
 
   onMouseMove(event: any) {
     if (this.isPainting) {
-      const currentPos: Position = this.getPositionFromEvent(event)
-      this.lineIncrement = {
-        startPos: this.prevPos,
-        endPos: currentPos
-      };
-      this.line.push(this.lineIncrement);
-      this.draw(this.prevPos, currentPos, this.strokeColour);
+      this.currentPos = this.getPositionFromEvent(event)
+      
+      if (this.brushToolBool) {
+        this.draw(this.prevPos, this.currentPos);
+      } 
+      else if (this.circleToolBool) {
+        this.drawCircle(this.prevPos, this.currentPos, this.mouseDown);
+      }
+      this.prevPos = {xPos: this.currentPos.xPos, yPos: this.currentPos.yPos};
     }
   }
 
   onTouchStart(event: TouchEvent) {
-    if (event.target == document.getElementById("canvasId")) {
+    if (event.target == this.canvasEl.nativeElement) {
       event.preventDefault();
     }
     const touch = event.touches[0]
@@ -157,7 +199,7 @@ export class HomeComponent implements OnInit {
   }
 
   onTouchMove(event: TouchEvent) {
-    if (event.target == document.getElementById("canvasId")) {
+    if (event.target == this.canvasEl.nativeElement) {
       event.preventDefault();
     }
     const touch = event.touches[0]
@@ -170,17 +212,9 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  draw(prevPos: Position, currentPos: Position, strokeColour: string) {
-    this.ctx.beginPath(); 
-    this.ctx.strokeStyle = strokeColour;
-    this.ctx.moveTo(prevPos.xPos, prevPos.yPos);
-    this.ctx.lineTo(currentPos.xPos, currentPos.yPos);
-    this.ctx.stroke();
-    this.prevPos = {
-      xPos: currentPos.xPos,
-      yPos: currentPos.yPos,
-    };
-  }
+// ##################################
+// Toggle Pages
+// ##################################
 
   toggleCanvas() {
     if (!this.initCanvasBool) {
@@ -189,17 +223,14 @@ export class HomeComponent implements OnInit {
       this.videoBool = false;
       this.canvasBool = true;
       this.feedbackBool = false;
-      (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
-      (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-      (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-      (document.getElementById("feedback-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      this.togglePages(this.canvasButton);
 
-      this.ctx = this.canvasEl.nativeElement.getContext('2d');
+      this.ctx = this.canvasEl.nativeElement.getContext('2d') as CanvasRenderingContext2D;
       const containerWidth = document.getElementById("app-container")?.getBoundingClientRect().width
       const containerHeight = document.getElementById("app-container")?.getBoundingClientRect().height
       
-      this.canvasEl.nativeElement.width = containerWidth;
-      this.canvasEl.nativeElement.height = containerHeight;
+      this.canvasEl.nativeElement.width = containerWidth as number;
+      this.canvasEl.nativeElement.height = containerHeight as number;
       this.ctx.fillStyle = 'white';
       this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
       this.ctx.lineJoin = 'round'
@@ -217,14 +248,11 @@ export class HomeComponent implements OnInit {
   toggleInstructions() {
     if (!this.instructionsBool) {
         this.instructionsBool = true;
-        (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
         this.canvasBool = false;
         this.ctx.canvas.hidden = true;
         this.feedbackBool = false;
         this.videoBool = false;
-        (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-        (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-        (document.getElementById("feedback-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+        this.togglePages(this.instructionsButton);
       }
   }
 
@@ -232,13 +260,10 @@ export class HomeComponent implements OnInit {
     if (!this.videoBool) {
       this.videoBool = true;
       this.canvasBool = false;
-      (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
       this.instructionsBool = false;
       this.feedbackBool = false;
       this.ctx.canvas.hidden = true;
-      (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-      (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-      (document.getElementById("feedback-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+      this.togglePages(this.videoButton);
     };
   }
 
@@ -249,33 +274,86 @@ export class HomeComponent implements OnInit {
       this.canvasBool = false;
       this.instructionsBool = false;
       this.ctx.canvas.hidden = true;
-      (document.getElementById("video-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-      (document.getElementById("instructions-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-      (document.getElementById("canvas-button") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-      (document.getElementById("feedback-button") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+      this.togglePages(this.feedbackButton);
     }
   }
 
+// ##################################
+// Toggle Canvas Tools
+// ##################################
+
   toggleBrushTool() {
-    (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
-    (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-    (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    this.toggleCanvasTools(this.brushButton);
     this.ctx.lineWidth = 5
-    this.strokeColour = '#000000';
+    this.ctx.strokeStyle = "#000000";
+  }
+
+  togglePenTool() {
+    this.toggleCanvasTools(this.penButton);
+    this.ctx.lineWidth = 5
+    this.ctx.strokeStyle = "#000000";
+    // ctx.beginPath();
+    //   var p = new Path2D();
+    //   p.moveTo(this.origin.x, this.origin.y);
+    //   p.lineTo(this.target.x, this.target.y);
+    //   p.stroke();
+    //   this.path = p;
+    //   console.log(p);
   }
 
   toggleEraserTool() {
-    (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-    (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
-    (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    this.toggleCanvasTools(this.eraserButton);
     this.ctx.lineWidth = 25
-    this.strokeColour = '#FFFFFF';
+    this.ctx.strokeStyle = "#FFFFFF";
+  }
+
+  toggleCircleTool() {
+    this.toggleCanvasTools(this.circleButton);
+    // (document.getElementById("circle-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
+    // (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    // (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    // (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    // (document.getElementById("pen-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
+    // const centerX = (this.prevPos) / 2;
+    // const centerY = this.canvasEl.nativeElement.height / 2;
+    // const radius = 70;
+
+    // this.ctx.beginPath();
+    // this.ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+    // this.ctx.fillStyle = 'green';
+    // this.ctx.fill();
+    // this.ctx.lineWidth = 5;
+    // this.ctx.strokeStyle = '#003300';
+    // this.ctx.stroke();
   }
 
   toggleTrashTool() {
     this.ctx.fillStyle = 'white';
     this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
   }
+
+  // ##################################
+  // Drawing Tools
+  // ##################################
+
+  draw(prevPos: Position, currentPos: Position) {
+    this.lineIncrement = {
+      startPos: prevPos,
+      endPos: currentPos
+    };
+    this.line.push(this.lineIncrement);
+    this.ctx.beginPath(); 
+    this.ctx.moveTo(prevPos.xPos, prevPos.yPos);
+    this.ctx.lineTo(currentPos.xPos, currentPos.yPos);
+    this.ctx.stroke();
+  }
+
+  drawCircle(prevPos: Position, currentPos: Position, mouseDown: Boolean) {
+  }
+
+  // ##################################
+  // Utility Tools
+  // ##################################
 
   getPositionFromEvent(event: MouseEvent) {
     const rect: DOMRect = this.canvasEl.nativeElement.getBoundingClientRect()
@@ -287,6 +365,39 @@ export class HomeComponent implements OnInit {
       yPos: canvasYPos
     };
     return position
+  }
+
+  togglePages(currentPageButton: HTMLButtonElement) {
+    this.pageButtonList.forEach((pageButton: HTMLButtonElement) => {
+      if (pageButton == currentPageButton) {
+        pageButton.style.background = this.darkenColour;
+      } else {
+        pageButton.style.background = this.standardColour;
+      }
+    })
+  }
+
+  toggleCanvasTools(currentToolButton: HTMLButtonElement) {
+    this.canvasButtonList.forEach((canvasButton: HTMLButtonElement) => {
+      if (canvasButton == currentToolButton) {
+        canvasButton.style.background = this.darkenColour;
+      } else {
+        canvasButton.style.background = this.standardColour;
+      }
+    })
+  }
+
+  intialiseVariables() {
+    this.videoButton = document.getElementById("video-button") as HTMLButtonElement
+    this.canvasButton = document.getElementById("canvas-button") as HTMLButtonElement
+    this.instructionsButton = document.getElementById("instructions-button") as HTMLButtonElement
+    this.feedbackButton = document.getElementById("feedback-button") as HTMLButtonElement
+
+    this.brushButton = document.getElementById("brush-button") as HTMLButtonElement
+    this.penButton = document.getElementById("pen-button") as HTMLButtonElement
+    this.circleButton = document.getElementById("circle-button") as HTMLButtonElement
+    this.eraserButton = document.getElementById("eraser-button") as HTMLButtonElement
+    this.trashButton = document.getElementById("trash-button") as HTMLButtonElement
   }
 
   sleep(milliseconds: number) {

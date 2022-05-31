@@ -16,7 +16,7 @@ export class HomeService {
 
   getWelcomeText(): Observable<any> {
     const headers = new HttpHeaders({authorization: 'Basic ' + btoa(`${user.username}:${user.password}`)})
-    return this.http.get(environment.env, {'headers': headers})
+    return this.http.get(environment.env)
   }
 
   getTapestry(): Observable<any> {
