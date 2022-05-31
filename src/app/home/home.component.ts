@@ -39,12 +39,6 @@ export class HomeComponent implements OnInit {
   @ViewChild('canvasEl') canvasEl!: ElementRef<HTMLCanvasElement>;
   ctx!: CanvasRenderingContext2D;
 
-  videoBool: boolean = true;
-  canvasBool: boolean = false;
-  feedbackBool: boolean = false;
-  instructionsBool: boolean = false;
-  initCanvasBool: boolean = false; 
-
   // Page buttons
   videoButton!: HTMLButtonElement;
   canvasButton!: HTMLButtonElement;
@@ -60,9 +54,16 @@ export class HomeComponent implements OnInit {
   trashButton!: HTMLButtonElement;
   canvasButtonList: HTMLButtonElement[] = []
 
+  // Hide Page Bools
+  videoBool!: boolean;
+  canvasBool!: boolean;
+  feedbackBool!: boolean;
+  instructionsBool!: boolean;
+  pageBoolList: Map<string, boolean> = new Map();
+
   brushToolBool: boolean = true;
   circleToolBool: boolean = false;
-
+  initCanvasBool: boolean = false; 
   standardColour: string = "rgba(13, 29, 207, 0.048)";
   darkenColour: string = "rgba(41, 169, 255, 0.473)";
   prevPos!: Position; 
@@ -86,6 +87,8 @@ export class HomeComponent implements OnInit {
   async ngOnInit() {
 
     firstValueFrom(this.homeService.getWelcomeText())
+    this.pageBoolList.set("video", true).set("canvas", false).set("feedback", false).set("instructions", false)
+    
     this.intialiseVariables()
     this.pageButtonList = [this.videoButton, this.canvasButton, this.instructionsButton, this.feedbackButton]
     this.canvasButtonList = [this.brushButton, this.penButton, this.circleButton, this.eraserButton, this.trashButton]
@@ -206,11 +209,8 @@ export class HomeComponent implements OnInit {
   toggleCanvas() {
     if (!this.initCanvasBool) {
       this.initCanvasBool = true;
-      this.instructionsBool = false;
-      this.videoBool = false;
-      this.canvasBool = true;
-      this.feedbackBool = false;
-      this.togglePages(this.canvasButton);
+      this.togglePageBools("canvas");
+      this.togglePageButtons(this.canvasButton);
 
       this.ctx = this.canvasEl.nativeElement.getContext('2d') as CanvasRenderingContext2D;
       const containerWidth = document.getElementById("app-container")?.getBoundingClientRect().width
@@ -224,44 +224,32 @@ export class HomeComponent implements OnInit {
       this.ctx.lineCap = 'round';
       this.ctx.lineWidth = 5;
     } else {
+      this.togglePageBools("canvas");
       this.ctx.canvas.hidden = false;
-      this.instructionsBool = false;
-      this.videoBool = false;
-      this.feedbackBool = false;
-      this.canvasBool = true;
     }
   }
 
   toggleInstructions() {
     if (!this.instructionsBool) {
-        this.instructionsBool = true;
-        this.canvasBool = false;
-        this.ctx.canvas.hidden = true;
-        this.feedbackBool = false;
-        this.videoBool = false;
-        this.togglePages(this.instructionsButton);
-      }
+      this.togglePageBools("instructions");
+      this.togglePageButtons(this.instructionsButton);
+      this.ctx.canvas.hidden = true;
+    }
   }
 
   toggleVideoPlayer() {
     if (!this.videoBool) {
-      this.videoBool = true;
-      this.canvasBool = false;
-      this.instructionsBool = false;
-      this.feedbackBool = false;
+      this.togglePageBools("video");
+      this.togglePageButtons(this.videoButton);
       this.ctx.canvas.hidden = true;
-      this.togglePages(this.videoButton);
     };
   }
 
   toggleFeedback() {
     if (!this.feedbackBool) {
-      this.feedbackBool = true;
-      this.videoBool = false;
-      this.canvasBool = false;
-      this.instructionsBool = false;
+      this.togglePageBools("feedback");
+      this.togglePageButtons(this.feedbackButton);
       this.ctx.canvas.hidden = true;
-      this.togglePages(this.feedbackButton);
     }
   }
 
@@ -354,7 +342,7 @@ export class HomeComponent implements OnInit {
     return position
   }
 
-  togglePages(currentPageButton: HTMLButtonElement) {
+  togglePageButtons(currentPageButton: HTMLButtonElement) {
     this.pageButtonList.forEach((pageButton: HTMLButtonElement) => {
       if (pageButton == currentPageButton) {
         pageButton.style.background = this.darkenColour;
@@ -362,6 +350,17 @@ export class HomeComponent implements OnInit {
         pageButton.style.background = this.standardColour;
       }
     })
+  }
+
+  togglePageBools(currentPageName: string) {
+    this.pageBoolList.forEach((pageBool: boolean, pageName: string) => {
+      if (pageName == currentPageName) {
+        this.pageBoolList.set(pageName, true)
+      } else {
+        this.pageBoolList.set(pageName, false)
+      }
+    })
+    this.initialisePageBools()
   }
 
   toggleCanvasTools(currentToolButton: HTMLButtonElement) {
@@ -385,6 +384,15 @@ export class HomeComponent implements OnInit {
     this.circleButton = document.getElementById("circle-button") as HTMLButtonElement
     this.eraserButton = document.getElementById("eraser-button") as HTMLButtonElement
     this.trashButton = document.getElementById("trash-button") as HTMLButtonElement
+
+    this.initialisePageBools()
+  }
+  
+  initialisePageBools() {
+    this.videoBool = this.pageBoolList.get("video") as boolean;
+    this.canvasBool = this.pageBoolList.get("canvas") as boolean;
+    this.feedbackBool = this.pageBoolList.get("feedback") as boolean;
+    this.instructionsBool = this.pageBoolList.get("instructions") as boolean;
   }
 
   sleep(milliseconds: number) {
