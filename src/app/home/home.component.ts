@@ -19,6 +19,7 @@ import { Position } from './models/Position.model';
 import { LineIncrement } from './models/LineIncrement.model';
 import { LineStorage } from './models/LineStorage.model';
 import { QuadCurve } from './models/QuadCurve.model';
+import { Oval } from './models/Oval.model';
 
 @Component({
   selector: 'home',
@@ -51,7 +52,7 @@ export class HomeComponent implements OnInit {
   // Canvas tool buttons
   brushButton!: HTMLButtonElement;
   penButton!: HTMLButtonElement;
-  circleButton!: HTMLButtonElement;
+  ovalButton!: HTMLButtonElement;
   eraserButton!: HTMLButtonElement;
   trashButton!: HTMLButtonElement;
   canvasButtonList: HTMLButtonElement[] = []
@@ -67,7 +68,7 @@ export class HomeComponent implements OnInit {
   // Hide Page Bools
   brushToolBool: boolean = true;
   penToolBool: boolean = false;
-  circleToolBool: boolean = false;
+  ovalToolBool: boolean = false;
 
   // Canvas Tool Bools
   isBrushPainting: boolean = false;
@@ -92,6 +93,8 @@ export class HomeComponent implements OnInit {
   commentary!: string[]
   currentComment!: string;
   currentQuadCurve!: QuadCurve;
+  isOvalPainting: boolean = false;
+  currentOval!: Oval;
 
   constructor(
     private homeService: HomeService,
@@ -101,10 +104,10 @@ export class HomeComponent implements OnInit {
   async ngOnInit() {
 
     this.pageBoolList.set("video", true).set("canvas", false).set("feedback", false).set("instructions", false)
-    this.canvasToolBoolList.set("brush", true).set("pen", false).set("circle", false)
+    this.canvasToolBoolList.set("brush", true).set("pen", false).set("oval", false)
     this.intialiseVariables()
     this.pageButtonList = [this.videoButton, this.canvasButton, this.instructionsButton, this.feedbackButton]
-    this.canvasButtonList = [this.brushButton, this.penButton, this.circleButton, this.eraserButton, this.trashButton]
+    this.canvasButtonList = [this.brushButton, this.penButton, this.ovalButton, this.eraserButton, this.trashButton]
 
     this.commentary = (await lastValueFrom(this.homeService.getAllComments())).map(row => row.comment).reverse();
     this.videoButton.style.background =  this.darkenColour;
@@ -191,6 +194,16 @@ export class HomeComponent implements OnInit {
         this.currentPos = this.getPositionFromEvent(event)
       }
     }
+    if (this.ovalToolBool) {
+      if (!this.isOvalPainting) {
+        this.isOvalPainting = true;
+        this.startPos = this.getPositionFromEvent(event)
+        this.currentPos = this.getPositionFromEvent(event)
+      } else if (this.isOvalPainting) {
+        this.lineStorage.black.oval.push(this.currentOval)
+        this.isOvalPainting = false
+      }
+    }
   }
 
   onMouseMove(event: any) {
@@ -210,9 +223,12 @@ export class HomeComponent implements OnInit {
         this.currentPos = this.getPositionFromEvent(event)
         this.drawBrushLine(this.prevPos, this.currentPos);
       }
+    }
+    if (this.ovalToolBool) {
+      if (this.isOvalPainting) {
+        this.drawOval(this.startPos as Position, this.currentPos);
+        this.currentPos = this.getPositionFromEvent(event)
       }
-    if (this.circleToolBool) {
-      this.drawCircle(this.startPos as Position, this.currentPos);
     }
   }
 
@@ -310,9 +326,9 @@ export class HomeComponent implements OnInit {
     this.ctx.strokeStyle = "#FFFFFF";
   }
 
-  toggleCircleTool() {
-    this.toggleCanvasToolButtons(this.circleButton);
-    this.toggleCanvasToolBools("circle");
+  toggleOvalTool() {
+    this.toggleCanvasToolButtons(this.ovalButton);
+    this.toggleCanvasToolBools("oval");
   }
 
   toggleTrashTool() {
@@ -359,7 +375,28 @@ export class HomeComponent implements OnInit {
 
   }
 
-  drawCircle(startPos: Position, currentPos: Position) {
+  drawOval(startPos: Position, currentPos: Position) {
+    this.clearAndRedraw()
+    let xCenter
+    let yCenter
+    const xRadius = Math.abs((currentPos.xPos - startPos.xPos) / 2)
+    const yRadius = Math.abs((currentPos.yPos - startPos.yPos) / 2)
+
+    if ((currentPos.xPos - startPos.xPos) > 0) {
+      xCenter = startPos.xPos + xRadius
+    } else {
+      xCenter = startPos.xPos - xRadius
+    }
+    if ((currentPos.yPos - startPos.yPos) > 0) {
+      yCenter = startPos.yPos + yRadius
+    } else {
+      yCenter = startPos.yPos - yRadius
+    }
+
+    this.currentOval = {xCenter: xCenter, yCenter: yCenter, xRadius: xRadius, yRadius: yRadius}
+    this.ctx.beginPath();
+    this.ctx.ellipse(xCenter, yCenter, xRadius, yRadius, 0, 0, 2 * Math.PI);
+    this.ctx.stroke();
   }
 
   clearAndRedraw() {
@@ -368,6 +405,7 @@ export class HomeComponent implements OnInit {
     this.redrawLines("black");
     this.redrawLines("white");
     this.redrawCurves("black");
+    this.redrawOvals("black");
   }
 
   redrawLines(colour: string) {
@@ -383,14 +421,23 @@ export class HomeComponent implements OnInit {
   }
 
   redrawCurves(colour: string) {
-    console.log(this.lineStorage);
-    
     this.ctx.strokeStyle = colour;
     const lineList: QuadCurve[] = this.lineStorage[colour]["quadCurve"]
     lineList.map((quadCurve: QuadCurve) => {
       this.ctx.beginPath(); 
       this.ctx.moveTo(quadCurve.startXPos, quadCurve.startYPos);
       this.ctx.quadraticCurveTo(quadCurve.angleXPos, quadCurve.angleYPos, quadCurve.endXPos, quadCurve.endYPos);
+      this.ctx.stroke();
+    })
+    this.ctx.strokeStyle = "black";
+  }
+
+  redrawOvals(colour: string) {
+    this.ctx.strokeStyle = colour;
+    const lineList: Oval[] = this.lineStorage[colour]["oval"]
+    lineList.map((oval: Oval) => {
+      this.ctx.beginPath();
+      this.ctx.ellipse(oval.xCenter, oval.yCenter, oval.xRadius, oval.yRadius, 0, 0, 2 * Math.PI);
       this.ctx.stroke();
     })
     this.ctx.strokeStyle = "black";
@@ -457,7 +504,7 @@ export class HomeComponent implements OnInit {
   initialiseCanvasToolBools() {
     this.brushToolBool = this.canvasToolBoolList.get("brush") as boolean;
     this.penToolBool = this.canvasToolBoolList.get("pen") as boolean;
-    this.circleToolBool = this.canvasToolBoolList.get("circle") as boolean;
+    this.ovalToolBool = this.canvasToolBoolList.get("oval") as boolean;
   }
 
   intialiseVariables() {
@@ -468,13 +515,13 @@ export class HomeComponent implements OnInit {
 
     this.brushButton = document.getElementById("brush-button") as HTMLButtonElement
     this.penButton = document.getElementById("pen-button") as HTMLButtonElement
-    this.circleButton = document.getElementById("circle-button") as HTMLButtonElement
+    this.ovalButton = document.getElementById("oval-button") as HTMLButtonElement
     this.eraserButton = document.getElementById("eraser-button") as HTMLButtonElement
     this.trashButton = document.getElementById("trash-button") as HTMLButtonElement
 
     this.initialisePageBools()
     this.lineStorage = {
-      "black": {"line": [], "quadCurve": []},
+      "black": {"line": [], "quadCurve": [], "oval": []},
       "white": {"line": []},
     }
   }
