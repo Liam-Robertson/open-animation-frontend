@@ -460,9 +460,9 @@ export class HomeComponent implements OnInit {
     this.ctx.fillStyle = 'white';
     this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
     this.redrawLines("black");
-    this.redrawLines("white");
     this.redrawCurves("black");
     this.redrawOvals("black");
+    this.redrawLines("white");
   }
 
   redrawLines(colour: string) {
