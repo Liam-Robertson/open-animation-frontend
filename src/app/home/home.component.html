@@ -22,14 +22,14 @@
     <div class="app-container" id="app-container">
         <div [hidden]="!initCanvasBool" class="canvas-container" id="canvas-container">
             <canvas class="canvasEl" id="canvasId"
-                (mousemove)="onMouseMove($event)" 
-                (mousedown)="onMouseDown($event)" 
+                (mousemove)="onMouseMove($event)"
+                (mousedown)="onMouseDown($event)"
                 (mouseup)="onMouseUp()" 
+                (mouseleave)="onMouseLeave()"
+                (mouseenter)="onMouseEnter()"
                 (touchmove)="onTouchMove($event)" 
                 (touchstart)="onTouchStart($event)" 
-                (touchend)="onTouchEnd()" 
-                (mouseleave)="onMouseLeave()" 
-                (mouseenter)="onMouseEnter()" 
+                (touchend)="onTouchEnd($event)"
                 #canvasEl
             ></canvas>
         </div>

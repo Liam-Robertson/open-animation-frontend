@@ -13,10 +13,12 @@ import { faCircle } from '@fortawesome/free-regular-svg-icons';
 import { faComments } from '@fortawesome/free-solid-svg-icons';
 import { MatDialog } from '@angular/material/dialog';
 import { UploadPopupComponent } from './upload-popup/upload-popup.component';
-import { firstValueFrom, lastValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom, throwError } from 'rxjs';
 import { Snippet } from './models/Snippet.model';
 import { Position } from './models/Position.model';
 import { LineIncrement } from './models/LineIncrement.model';
+import { LineStorage } from './models/LineStorage.model';
+import { QuadCurve } from './models/QuadCurve.model';
 
 @Component({
   selector: 'home',
@@ -60,17 +62,28 @@ export class HomeComponent implements OnInit {
   feedbackBool!: boolean;
   instructionsBool!: boolean;
   pageBoolList: Map<string, boolean> = new Map();
+  canvasToolBoolList: Map<string, boolean> = new Map();
 
+  // Hide Page Bools
   brushToolBool: boolean = true;
+  penToolBool: boolean = false;
   circleToolBool: boolean = false;
+
+  // Canvas Tool Bools
+  isBrushPainting: boolean = false;
+  isPenLinePainting: boolean = false;
+  isPenLineDragging: boolean = false;
+
+  // Position Variables
+  startPos!: Position | null;
+  prevPos!: Position; 
+  currentPos!: Position;
+  quadCurveEndPos!: Position;
+
   initCanvasBool: boolean = false; 
   standardColour: string = "rgba(13, 29, 207, 0.048)";
   darkenColour: string = "rgba(41, 169, 255, 0.473)";
-  prevPos!: Position; 
-  mouseDown!: Boolean;
-  currentPos!: Position;
-  isPainting: boolean = false;
-  line: LineIncrement[] = [];
+  lineStorage!: any;
   lineIncrement!: LineIncrement;
   canvasLoadCounter: number = 0;
   endTime!: number;
@@ -86,9 +99,8 @@ export class HomeComponent implements OnInit {
 
   async ngOnInit() {
 
-    firstValueFrom(this.homeService.getWelcomeText())
     this.pageBoolList.set("video", true).set("canvas", false).set("feedback", false).set("instructions", false)
-    
+    this.canvasToolBoolList.set("brush", true).set("pen", false).set("circle", false)
     this.intialiseVariables()
     this.pageButtonList = [this.videoButton, this.canvasButton, this.instructionsButton, this.feedbackButton]
     this.canvasButtonList = [this.brushButton, this.penButton, this.circleButton, this.eraserButton, this.trashButton]
@@ -143,42 +155,70 @@ export class HomeComponent implements OnInit {
 // Mouse Actions
 // ##################################
 
-  onMouseUp() {
-    if (this.isPainting) {
-      this.isPainting = false;
-    }
-  }
-
   onMouseLeave() {
-    if (this.isPainting) {
-      this.isPainting = false;
+    if (this.isBrushPainting) {
+      this.isBrushPainting = false;
     }
   }
 
   onMouseEnter() {
-    if (this.isPainting) {
-      this.isPainting = false;
+    if (this.isBrushPainting) {
+      this.isBrushPainting = false;
     }
   }
 
   onMouseDown(event: any) {
-    this.isPainting = true;
-    this.prevPos = this.getPositionFromEvent(event)
+    if (this.penToolBool) { 
+      if (this.isPenLinePainting) {
+        this.quadCurveEndPos = this.currentPos
+        this.isPenLinePainting = false
+        this.isPenLineDragging = true
+      } 
+      else if (this.isPenLineDragging) {
+        this.isPenLineDragging = false
+      }
+      else if (!this.isPenLinePainting && !this.isPenLineDragging) {
+        this.startPos = this.getPositionFromEvent(event)
+        this.currentPos = this.getPositionFromEvent(event)
+        this.isPenLinePainting = true
+      }
+    }
+    if (this.brushToolBool) {
+      if (!this.isBrushPainting) {
+        this.isBrushPainting = true;
+        this.currentPos = this.getPositionFromEvent(event)
+      }
+    }
   }
 
   onMouseMove(event: any) {
-    if (this.isPainting) {
-      this.currentPos = this.getPositionFromEvent(event)
-      
-      if (this.brushToolBool) {
-        this.draw(this.prevPos, this.currentPos);
-      } 
-      else if (this.circleToolBool) {
-        this.drawCircle(this.prevPos, this.currentPos, this.mouseDown);
+    if (this.penToolBool) {
+      if (this.isPenLinePainting) {
+        this.currentPos = this.getPositionFromEvent(event)
+        this.dragPenLine(this.startPos as Position, this.currentPos);
       }
-      this.prevPos = {xPos: this.currentPos.xPos, yPos: this.currentPos.yPos};
+      else if (this.isPenLineDragging) {
+        this.currentPos = this.getPositionFromEvent(event)
+        this.dragPenCurve(this.startPos as Position, this.currentPos, this.quadCurveEndPos)
+      } 
+    } 
+    if (this.brushToolBool) {
+      if (this.isBrushPainting) {
+        this.prevPos = this.currentPos
+        this.currentPos = this.getPositionFromEvent(event)
+        this.drawBrushLine(this.prevPos, this.currentPos);
+      }
+      }
+    if (this.circleToolBool) {
+      this.drawCircle(this.startPos as Position, this.currentPos);
     }
   }
+
+  onMouseUp() {
+      if (this.isBrushPainting) {
+        this.isBrushPainting = false;
+      }
+    }
 
   onTouchStart(event: TouchEvent) {
     if (event.target == this.canvasEl.nativeElement) {
@@ -194,12 +234,15 @@ export class HomeComponent implements OnInit {
     }
     const touch = event.touches[0]
     this.onMouseMove(touch)
+    
   }
 
-  onTouchEnd() {
-    if (this.isPainting) {
-      this.isPainting = false;
+  onTouchEnd(event: TouchEvent) {
+    if (this.isBrushPainting) {
+      this.isBrushPainting = false;
     }
+    const touch = event.touches[0]
+    this.onMouseUp()
   }
 
 // ##################################
@@ -207,24 +250,11 @@ export class HomeComponent implements OnInit {
 // ##################################
 
   toggleCanvas() {
+    this.togglePageBools("canvas");
     if (!this.initCanvasBool) {
-      this.initCanvasBool = true;
-      this.togglePageBools("canvas");
       this.togglePageButtons(this.canvasButton);
-
-      this.ctx = this.canvasEl.nativeElement.getContext('2d') as CanvasRenderingContext2D;
-      const containerWidth = document.getElementById("app-container")?.getBoundingClientRect().width
-      const containerHeight = document.getElementById("app-container")?.getBoundingClientRect().height
-      
-      this.canvasEl.nativeElement.width = containerWidth as number;
-      this.canvasEl.nativeElement.height = containerHeight as number;
-      this.ctx.fillStyle = 'white';
-      this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
-      this.ctx.lineJoin = 'round'
-      this.ctx.lineCap = 'round';
-      this.ctx.lineWidth = 5;
+      this.initCanvasVariables();
     } else {
-      this.togglePageBools("canvas");
       this.ctx.canvas.hidden = false;
     }
   }
@@ -258,72 +288,107 @@ export class HomeComponent implements OnInit {
 // ##################################
 
   toggleBrushTool() {
-    this.toggleCanvasTools(this.brushButton);
+    this.toggleCanvasToolButtons(this.brushButton);
+    this.toggleCanvasToolBools("brush");
     this.ctx.lineWidth = 5
     this.ctx.strokeStyle = "#000000";
   }
 
   togglePenTool() {
-    this.toggleCanvasTools(this.penButton);
+    this.toggleCanvasToolButtons(this.penButton);
+    this.toggleCanvasToolBools("pen");
     this.ctx.lineWidth = 5
     this.ctx.strokeStyle = "#000000";
-    // ctx.beginPath();
-    //   var p = new Path2D();
-    //   p.moveTo(this.origin.x, this.origin.y);
-    //   p.lineTo(this.target.x, this.target.y);
-    //   p.stroke();
-    //   this.path = p;
-    //   console.log(p);
   }
 
   toggleEraserTool() {
-    this.toggleCanvasTools(this.eraserButton);
+    this.toggleCanvasToolButtons(this.eraserButton);
+    this.toggleCanvasToolBools("eraser");
     this.ctx.lineWidth = 25
     this.ctx.strokeStyle = "#FFFFFF";
   }
 
   toggleCircleTool() {
-    this.toggleCanvasTools(this.circleButton);
-    // (document.getElementById("circle-tool") as HTMLButtonElement).style.background =  "rgba(41, 169, 255, 0.473)";
-    // (document.getElementById("brush-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-    // (document.getElementById("eraser-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-    // (document.getElementById("trash-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-    // (document.getElementById("pen-tool") as HTMLButtonElement).style.background =  "rgba(13, 29, 207, 0.048)";
-    // const centerX = (this.prevPos) / 2;
-    // const centerY = this.canvasEl.nativeElement.height / 2;
-    // const radius = 70;
-
-    // this.ctx.beginPath();
-    // this.ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-    // this.ctx.fillStyle = 'green';
-    // this.ctx.fill();
-    // this.ctx.lineWidth = 5;
-    // this.ctx.strokeStyle = '#003300';
-    // this.ctx.stroke();
+    this.toggleCanvasToolButtons(this.circleButton);
+    this.toggleCanvasToolBools("circle");
   }
 
   toggleTrashTool() {
     this.ctx.fillStyle = 'white';
     this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
+    for (let colourKey in this.lineStorage) {
+      for (let lineTypeKey in this.lineStorage[colourKey]) {
+        this.lineStorage[colourKey][lineTypeKey] = []
+      }
+    }
   }
 
   // ##################################
   // Drawing Tools
   // ##################################
 
-  draw(prevPos: Position, currentPos: Position) {
+  drawBrushLine(prevPos: Position, currentPos: Position) {
     this.lineIncrement = {
       startPos: prevPos,
       endPos: currentPos
     };
-    this.line.push(this.lineIncrement);
+    this.lineStorage.black.line.push(this.lineIncrement)
     this.ctx.beginPath(); 
     this.ctx.moveTo(prevPos.xPos, prevPos.yPos);
     this.ctx.lineTo(currentPos.xPos, currentPos.yPos);
     this.ctx.stroke();
   }
 
-  drawCircle(prevPos: Position, currentPos: Position, mouseDown: Boolean) {
+  dragPenLine(startPos: Position, currentPos: Position) {
+    this.clearAndRedraw();
+    this.ctx.beginPath();
+    this.ctx.moveTo(startPos.xPos, startPos.yPos);
+    this.ctx.lineTo(currentPos.xPos, currentPos.yPos);
+    this.ctx.stroke();
+  }
+
+  dragPenCurve(startPos: Position, anglePos: Position, endPos: Position) {
+    this.clearAndRedraw();
+    this.ctx.beginPath();
+    this.ctx.moveTo(startPos.xPos, startPos.yPos);
+    this.ctx.quadraticCurveTo(anglePos.xPos, anglePos.yPos, endPos.xPos, endPos.yPos);
+    this.ctx.stroke();
+    this.lineStorage.black.quadCurve.push(anglePos.xPos, anglePos.yPos, endPos.xPos, endPos.yPos)
+  }
+
+  drawCircle(startPos: Position, currentPos: Position) {
+  }
+
+  clearAndRedraw() {
+    this.ctx.fillStyle = 'white';
+    this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
+    this.redrawLines("black");
+    this.redrawLines("white");
+    this.redrawCurves("black");
+  }
+
+  redrawLines(colour: string) {
+    this.ctx.strokeStyle = colour;
+    const lineList: LineIncrement[] = this.lineStorage[colour]["line"]
+    lineList.map((lineIncrement: LineIncrement) => {
+      this.ctx.beginPath(); 
+      this.ctx.moveTo(lineIncrement.startPos.xPos, lineIncrement.startPos.yPos);
+      this.ctx.lineTo(lineIncrement.endPos.xPos, lineIncrement.endPos.yPos);
+      this.ctx.stroke();
+    })
+    this.ctx.strokeStyle = "black";
+  }
+
+  redrawCurves(colour: string) {
+    this.ctx.strokeStyle = colour;
+    const lineList: QuadCurve[] = this.lineStorage[colour]["quadCurve"]
+    lineList.map((quadCurve: QuadCurve) => {
+      this.ctx.beginPath(); 
+      this.ctx.moveTo(quadCurve.startXPos, quadCurve.startYPos);
+      this.ctx.quadraticCurveTo(quadCurve.angleXPos, quadCurve.angleYPos, quadCurve.endXPos, quadCurve.endYPos);
+      this.ctx.stroke();
+    })
+    this.ctx.strokeStyle = "black";
   }
 
   // ##################################
@@ -363,7 +428,7 @@ export class HomeComponent implements OnInit {
     this.initialisePageBools()
   }
 
-  toggleCanvasTools(currentToolButton: HTMLButtonElement) {
+  toggleCanvasToolButtons(currentToolButton: HTMLButtonElement) {
     this.canvasButtonList.forEach((canvasButton: HTMLButtonElement) => {
       if (canvasButton == currentToolButton) {
         canvasButton.style.background = this.darkenColour;
@@ -371,6 +436,23 @@ export class HomeComponent implements OnInit {
         canvasButton.style.background = this.standardColour;
       }
     })
+  }
+
+  toggleCanvasToolBools(currentToolName: string) {
+    this.canvasToolBoolList.forEach((toolBool: boolean, toolName: string) => {
+      if (toolName == currentToolName) {
+        this.canvasToolBoolList.set(toolName, true)
+      } else {
+        this.canvasToolBoolList.set(toolName, false)
+      }
+    })
+    this.initialiseCanvasToolBools()
+  }
+
+  initialiseCanvasToolBools() {
+    this.brushToolBool = this.canvasToolBoolList.get("brush") as boolean;
+    this.penToolBool = this.canvasToolBoolList.get("pen") as boolean;
+    this.circleToolBool = this.canvasToolBoolList.get("circle") as boolean;
   }
 
   intialiseVariables() {
@@ -386,6 +468,10 @@ export class HomeComponent implements OnInit {
     this.trashButton = document.getElementById("trash-button") as HTMLButtonElement
 
     this.initialisePageBools()
+    this.lineStorage = {
+      "black": {"line": [], "quadCurve": []},
+      "white": {"line": []},
+    }
   }
   
   initialisePageBools() {
@@ -393,6 +479,20 @@ export class HomeComponent implements OnInit {
     this.canvasBool = this.pageBoolList.get("canvas") as boolean;
     this.feedbackBool = this.pageBoolList.get("feedback") as boolean;
     this.instructionsBool = this.pageBoolList.get("instructions") as boolean;
+  }
+
+  initCanvasVariables() {
+    this.initCanvasBool = true;
+    this.ctx = this.canvasEl.nativeElement.getContext('2d') as CanvasRenderingContext2D;
+    const containerWidth = document.getElementById("app-container")?.getBoundingClientRect().width
+    const containerHeight = document.getElementById("app-container")?.getBoundingClientRect().height
+    this.canvasEl.nativeElement.width = containerWidth as number;
+    this.canvasEl.nativeElement.height = containerHeight as number;
+    this.ctx.fillStyle = 'white';
+    this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
+    this.ctx.lineJoin = 'round'
+    this.ctx.lineCap = 'round';
+    this.ctx.lineWidth = 5;
   }
 
   sleep(milliseconds: number) {
