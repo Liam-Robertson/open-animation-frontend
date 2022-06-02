@@ -1,6 +1,6 @@
 import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
 import { HomeService } from './home.service';
-import { faEraser } from '@fortawesome/free-solid-svg-icons';
+import { faEraser, faMarsStroke } from '@fortawesome/free-solid-svg-icons';
 import { faPaintBrush } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { faCommenting } from '@fortawesome/free-solid-svg-icons';
@@ -202,6 +202,8 @@ export class HomeComponent implements OnInit {
       if (!this.isEraserPainting) {
         this.isEraserPainting = true;
         this.currentPos = this.getPositionFromEvent(event)
+        this.ctx.lineWidth = 25
+        this.ctx.strokeStyle = "#FFFFFF";
       }
     }
     if (this.ovalToolBool) {
@@ -236,10 +238,9 @@ export class HomeComponent implements OnInit {
     } 
     if (this.eraserToolBool) {
       if (this.isEraserPainting) {
-        
         this.prevPos = this.currentPos
         this.currentPos = this.getPositionFromEvent(event)
-        this.drawBrushLine(this.prevPos, this.currentPos);
+        this.drawEraserLine(this.prevPos, this.currentPos);
       }
     }
     if (this.ovalToolBool) {
@@ -255,6 +256,8 @@ export class HomeComponent implements OnInit {
       this.isBrushPainting = false;
     }
     if (this.isEraserPainting) {
+      this.ctx.lineWidth = 5
+      this.ctx.strokeStyle = "#000000";
       this.isEraserPainting = false;
     }
   }
@@ -343,8 +346,6 @@ export class HomeComponent implements OnInit {
   toggleEraserTool() {
     this.toggleCanvasToolButtons(this.eraserButton);
     this.toggleCanvasToolBools("eraser");
-    this.ctx.lineWidth = 25
-    this.ctx.strokeStyle = "#FFFFFF";
   }
 
   toggleOvalTool() {
@@ -396,6 +397,18 @@ export class HomeComponent implements OnInit {
       endPos: currentPos
     };
     this.lineStorage.black.line.push(this.lineIncrement)
+    this.ctx.beginPath(); 
+    this.ctx.moveTo(prevPos.xPos, prevPos.yPos);
+    this.ctx.lineTo(currentPos.xPos, currentPos.yPos);
+    this.ctx.stroke();
+  }
+
+  drawEraserLine(prevPos: Position, currentPos: Position) {
+    this.lineIncrement = {
+      startPos: prevPos,
+      endPos: currentPos
+    };
+    this.lineStorage.white.line.push(this.lineIncrement)
     this.ctx.beginPath(); 
     this.ctx.moveTo(prevPos.xPos, prevPos.yPos);
     this.ctx.lineTo(currentPos.xPos, currentPos.yPos);
@@ -454,6 +467,7 @@ export class HomeComponent implements OnInit {
 
   redrawLines(colour: string) {
     this.ctx.strokeStyle = colour;
+    if (colour == "white") {this.ctx.lineWidth = 25}
     const lineList: LineIncrement[] = this.lineStorage[colour]["line"]
     lineList.map((lineIncrement: LineIncrement) => {
       this.ctx.beginPath(); 
@@ -461,6 +475,7 @@ export class HomeComponent implements OnInit {
       this.ctx.lineTo(lineIncrement.endPos.xPos, lineIncrement.endPos.yPos);
       this.ctx.stroke();
     })
+    this.ctx.lineWidth = 5    
     this.ctx.strokeStyle = "black";
   }
 
