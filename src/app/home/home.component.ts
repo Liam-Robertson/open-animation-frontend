@@ -11,6 +11,7 @@ import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { faCircle } from '@fortawesome/free-regular-svg-icons';
 import { faComments } from '@fortawesome/free-solid-svg-icons';
+import { faImages } from '@fortawesome/free-solid-svg-icons';
 import { MatDialog } from '@angular/material/dialog';
 import { UploadPopupComponent } from './upload-popup/upload-popup.component';
 import { firstValueFrom, lastValueFrom, throwError } from 'rxjs';
@@ -38,6 +39,7 @@ export class HomeComponent implements OnInit {
   faCircle = faCircle;
   faComments = faComments;
   faPen = faPenFancy;
+  faImages = faImages;
 
   @ViewChild('canvasEl') canvasEl!: ElementRef<HTMLCanvasElement>;
   ctx!: CanvasRenderingContext2D;
@@ -67,6 +69,7 @@ export class HomeComponent implements OnInit {
 
   // Hide Page Bools
   brushToolBool: boolean = true;
+  eraserToolBool: boolean = false;
   penToolBool: boolean = false;
   ovalToolBool: boolean = false;
 
@@ -95,6 +98,8 @@ export class HomeComponent implements OnInit {
   currentQuadCurve!: QuadCurve;
   isOvalPainting: boolean = false;
   currentOval!: Oval;
+  currentFile!: File | null;
+  isEraserPainting: boolean = false
 
   constructor(
     private homeService: HomeService,
@@ -102,9 +107,8 @@ export class HomeComponent implements OnInit {
   ) { }
 
   async ngOnInit() {
-
     this.pageBoolList.set("video", true).set("canvas", false).set("feedback", false).set("instructions", false)
-    this.canvasToolBoolList.set("brush", true).set("pen", false).set("oval", false)
+    this.canvasToolBoolList.set("brush", true).set("pen", false).set("eraser", false).set("oval", false)
     this.intialiseVariables()
     this.pageButtonList = [this.videoButton, this.canvasButton, this.instructionsButton, this.feedbackButton]
     this.canvasButtonList = [this.brushButton, this.penButton, this.ovalButton, this.eraserButton, this.trashButton]
@@ -194,6 +198,12 @@ export class HomeComponent implements OnInit {
         this.currentPos = this.getPositionFromEvent(event)
       }
     }
+    if (this.eraserToolBool) {
+      if (!this.isEraserPainting) {
+        this.isEraserPainting = true;
+        this.currentPos = this.getPositionFromEvent(event)
+      }
+    }
     if (this.ovalToolBool) {
       if (!this.isOvalPainting) {
         this.isOvalPainting = true;
@@ -223,6 +233,14 @@ export class HomeComponent implements OnInit {
         this.currentPos = this.getPositionFromEvent(event)
         this.drawBrushLine(this.prevPos, this.currentPos);
       }
+    } 
+    if (this.eraserToolBool) {
+      if (this.isEraserPainting) {
+        
+        this.prevPos = this.currentPos
+        this.currentPos = this.getPositionFromEvent(event)
+        this.drawBrushLine(this.prevPos, this.currentPos);
+      }
     }
     if (this.ovalToolBool) {
       if (this.isOvalPainting) {
@@ -233,10 +251,13 @@ export class HomeComponent implements OnInit {
   }
 
   onMouseUp() {
-      if (this.isBrushPainting) {
-        this.isBrushPainting = false;
-      }
+    if (this.isBrushPainting) {
+      this.isBrushPainting = false;
     }
+    if (this.isEraserPainting) {
+      this.isEraserPainting = false;
+    }
+  }
 
   onTouchStart(event: TouchEvent) {
     if (event.target == this.canvasEl.nativeElement) {
@@ -341,6 +362,30 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  toggleReferenceTool() {
+    let input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = _this => {
+              this.currentFile = (input.files as FileList)[0]
+          };
+    input.click();
+
+    if(this.currentFile != null) {
+      const ctx = this.ctx
+      const canvas = this.canvasEl.nativeElement
+      var reader = new FileReader()
+      reader.readAsDataURL(this.currentFile)
+      reader.onloadend = function (e) {
+        var myImage = new Image()
+        myImage.src = reader.result as string
+        myImage.onload = function(ev) {
+          ctx.drawImage(myImage,0,0)
+          canvas.toDataURL("image/jpeg",0.75)
+        }
+      }
+    }
+  }
+
   // ##################################
   // Drawing Tools
   // ##################################
@@ -372,7 +417,6 @@ export class HomeComponent implements OnInit {
     this.ctx.quadraticCurveTo(anglePos.xPos, anglePos.yPos, endPos.xPos, endPos.yPos);
     this.ctx.stroke();
     this.currentQuadCurve = {startXPos: startPos.xPos, startYPos: startPos.yPos, angleXPos: anglePos.xPos, angleYPos: anglePos.yPos, endXPos: endPos.xPos, endYPos: endPos.yPos}
-
   }
 
   drawOval(startPos: Position, currentPos: Position) {
@@ -504,6 +548,7 @@ export class HomeComponent implements OnInit {
   initialiseCanvasToolBools() {
     this.brushToolBool = this.canvasToolBoolList.get("brush") as boolean;
     this.penToolBool = this.canvasToolBoolList.get("pen") as boolean;
+    this.eraserToolBool = this.canvasToolBoolList.get("eraser") as boolean;
     this.ovalToolBool = this.canvasToolBoolList.get("oval") as boolean;
   }
 
