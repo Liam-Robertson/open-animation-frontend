@@ -91,6 +91,7 @@ export class HomeComponent implements OnInit {
   loading: boolean = false;
   commentary!: string[]
   currentComment!: string;
+  currentQuadCurve!: QuadCurve;
 
   constructor(
     private homeService: HomeService,
@@ -176,6 +177,7 @@ export class HomeComponent implements OnInit {
       } 
       else if (this.isPenLineDragging) {
         this.isPenLineDragging = false
+        this.lineStorage.black.quadCurve.push(this.currentQuadCurve)
       }
       else if (!this.isPenLinePainting && !this.isPenLineDragging) {
         this.startPos = this.getPositionFromEvent(event)
@@ -353,7 +355,8 @@ export class HomeComponent implements OnInit {
     this.ctx.moveTo(startPos.xPos, startPos.yPos);
     this.ctx.quadraticCurveTo(anglePos.xPos, anglePos.yPos, endPos.xPos, endPos.yPos);
     this.ctx.stroke();
-    this.lineStorage.black.quadCurve.push(anglePos.xPos, anglePos.yPos, endPos.xPos, endPos.yPos)
+    this.currentQuadCurve = {startXPos: startPos.xPos, startYPos: startPos.yPos, angleXPos: anglePos.xPos, angleYPos: anglePos.yPos, endXPos: endPos.xPos, endYPos: endPos.yPos}
+
   }
 
   drawCircle(startPos: Position, currentPos: Position) {
@@ -380,6 +383,8 @@ export class HomeComponent implements OnInit {
   }
 
   redrawCurves(colour: string) {
+    console.log(this.lineStorage);
+    
     this.ctx.strokeStyle = colour;
     const lineList: QuadCurve[] = this.lineStorage[colour]["quadCurve"]
     lineList.map((quadCurve: QuadCurve) => {
