@@ -12,12 +12,15 @@
         <div [hidden]="!canvasBool" class="canvas-tool" id="oval-button" (click)="toggleOvalTool()">
             <fa-icon [icon]="faCircle" transform="grow-15"></fa-icon>
         </div>
+        <div [hidden]="!canvasBool" class="canvas-tool" id="undo-button" (click)="toggleUndoTool()">
+            <fa-icon [icon]="faUndo" transform="grow-15"></fa-icon>
+        </div>
         <div [hidden]="!canvasBool" class="canvas-tool" id="trash-button" (click)="toggleTrashTool()">
             <fa-icon [icon]="faTrash" transform="grow-15"></fa-icon>
         </div>
-        <!-- <div [hidden]="!canvasBool" class="canvas-tool" id="reference-button" (click)="toggleReferenceTool()">
+        <div [hidden]="!canvasBool" class="canvas-tool" id="reference-button" (click)="toggleReferenceTool()">
             <fa-icon [icon]="faImages" transform="grow-15"></fa-icon>
-        </div> -->
+        </div>
         <div [hidden]="!canvasBool" class="upload-tool" (click)="uploadSnippet()">
             <fa-icon [icon]="faUpload" transform="grow-15"></fa-icon>
         </div>

@@ -1,8 +1,9 @@
 export interface QuadCurve {
-    startXPos: number;
-    startYPos: number;
-    angleXPos: number;
-    angleYPos: number;
-    endXPos: number;
-    endYPos: number;
-  }
+  name: string;
+  startXPos: number;
+  startYPos: number;
+  angleXPos: number;
+  angleYPos: number;
+  endXPos: number;
+  endYPos: number;
+}

@@ -10,17 +10,19 @@ import { faFilm } from '@fortawesome/free-solid-svg-icons';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { faCircle } from '@fortawesome/free-regular-svg-icons';
+import { faArrowRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import { faComments } from '@fortawesome/free-solid-svg-icons';
 import { faImages } from '@fortawesome/free-solid-svg-icons';
 import { MatDialog } from '@angular/material/dialog';
 import { UploadPopupComponent } from './upload-popup/upload-popup.component';
-import { firstValueFrom, lastValueFrom, throwError } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 import { Snippet } from './models/Snippet.model';
 import { Position } from './models/Position.model';
-import { LineIncrement } from './models/LineIncrement.model';
-import { LineStorage } from './models/LineStorage.model';
+import { BrushLine } from './models/BrushLine.model';
 import { QuadCurve } from './models/QuadCurve.model';
 import { Oval } from './models/Oval.model';
+import { EraserLine } from './models/EraserLine.model';
+import { LineIncrement } from './models/LineIncrement.model';
 
 @Component({
   selector: 'home',
@@ -39,6 +41,7 @@ export class HomeComponent implements OnInit {
   faCircle = faCircle;
   faComments = faComments;
   faPen = faPenFancy;
+  faUndo = faArrowRotateLeft;
   faImages = faImages;
 
   @ViewChild('canvasEl') canvasEl!: ElementRef<HTMLCanvasElement>;
@@ -77,6 +80,8 @@ export class HomeComponent implements OnInit {
   isBrushPainting: boolean = false;
   isPenLinePainting: boolean = false;
   isPenLineDragging: boolean = false;
+  isEraserPainting: boolean = false
+  isOvalPainting: boolean = false;
 
   // Position Variables
   startPos!: Position | null;
@@ -84,22 +89,25 @@ export class HomeComponent implements OnInit {
   currentPos!: Position;
   quadCurveEndPos!: Position;
 
+  // Current Line Variables
+  currentBrushLine!: BrushLine;
+  currentEraserLine!: EraserLine;
+  currentQuadCurve!: QuadCurve;
+  currentOval!: Oval;
+  currentBrushLineIncrement!: LineIncrement;
+  currentEraserLineIncrement!: LineIncrement;
+
   initCanvasBool: boolean = false; 
   standardColour: string = "rgba(13, 29, 207, 0.048)";
   darkenColour: string = "rgba(41, 169, 255, 0.473)";
-  lineStorage!: any;
-  lineIncrement!: LineIncrement;
+  lineStorage: any[] = [];
   canvasLoadCounter: number = 0;
   endTime!: number;
   startTime!: number;
   loading: boolean = false;
   commentary!: string[]
   currentComment!: string;
-  currentQuadCurve!: QuadCurve;
-  isOvalPainting: boolean = false;
-  currentOval!: Oval;
   currentFile!: File | null;
-  isEraserPainting: boolean = false
 
   constructor(
     private homeService: HomeService,
@@ -184,7 +192,7 @@ export class HomeComponent implements OnInit {
       } 
       else if (this.isPenLineDragging) {
         this.isPenLineDragging = false
-        this.lineStorage.black.quadCurve.push(this.currentQuadCurve)
+        this.lineStorage.push(this.currentQuadCurve)
       }
       else if (!this.isPenLinePainting && !this.isPenLineDragging) {
         this.startPos = this.getPositionFromEvent(event)
@@ -196,6 +204,7 @@ export class HomeComponent implements OnInit {
       if (!this.isBrushPainting) {
         this.isBrushPainting = true;
         this.currentPos = this.getPositionFromEvent(event)
+        this.currentBrushLine = {name: "brushLine", lineIncrementList: []}
       }
     }
     if (this.eraserToolBool) {
@@ -204,6 +213,7 @@ export class HomeComponent implements OnInit {
         this.currentPos = this.getPositionFromEvent(event)
         this.ctx.lineWidth = 25
         this.ctx.strokeStyle = "#FFFFFF";
+        this.currentEraserLine = {name: "eraserLine", lineIncrementList: []}
       }
     }
     if (this.ovalToolBool) {
@@ -212,7 +222,7 @@ export class HomeComponent implements OnInit {
         this.startPos = this.getPositionFromEvent(event)
         this.currentPos = this.getPositionFromEvent(event)
       } else if (this.isOvalPainting) {
-        this.lineStorage.black.oval.push(this.currentOval)
+        this.lineStorage.push(this.currentOval)
         this.isOvalPainting = false
       }
     }
@@ -233,14 +243,14 @@ export class HomeComponent implements OnInit {
       if (this.isBrushPainting) {
         this.prevPos = this.currentPos
         this.currentPos = this.getPositionFromEvent(event)
-        this.drawBrushLine(this.prevPos, this.currentPos);
+        this.drawBrushLineIncrement(this.prevPos, this.currentPos);
       }
     } 
     if (this.eraserToolBool) {
       if (this.isEraserPainting) {
         this.prevPos = this.currentPos
         this.currentPos = this.getPositionFromEvent(event)
-        this.drawEraserLine(this.prevPos, this.currentPos);
+        this.drawEraserLineIncrement(this.prevPos, this.currentPos);
       }
     }
     if (this.ovalToolBool) {
@@ -254,11 +264,17 @@ export class HomeComponent implements OnInit {
   onMouseUp() {
     if (this.isBrushPainting) {
       this.isBrushPainting = false;
+      this.currentBrushLine.name = "brushLine"
+      this.lineStorage.push(this.currentBrushLine)
+      console.log(this.lineStorage);
     }
     if (this.isEraserPainting) {
+      this.isEraserPainting = false;
+      this.currentEraserLine.name = "eraserLine"
+      this.lineStorage.push(this.currentEraserLine)
       this.ctx.lineWidth = 5
       this.ctx.strokeStyle = "#000000";
-      this.isEraserPainting = false;
+      console.log(this.lineStorage);
     }
   }
 
@@ -363,6 +379,12 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  toggleUndoTool() {
+    this.lineStorage.pop()
+    this.clearAndRedraw()
+    console.log(this.lineStorage);
+  }
+
   toggleReferenceTool() {
     let input = document.createElement('input');
     input.type = 'file';
@@ -380,8 +402,8 @@ export class HomeComponent implements OnInit {
         var myImage = new Image()
         myImage.src = reader.result as string
         myImage.onload = function(ev) {
-          ctx.drawImage(myImage,0,0)
-          canvas.toDataURL("image/jpeg",0.75)
+          ctx.drawImage(myImage, 0, 0)
+          canvas.toDataURL("image/jpeg", 0.75)
         }
       }
     }
@@ -391,24 +413,24 @@ export class HomeComponent implements OnInit {
   // Drawing Tools
   // ##################################
 
-  drawBrushLine(prevPos: Position, currentPos: Position) {
-    this.lineIncrement = {
+  drawBrushLineIncrement(prevPos: Position, currentPos: Position) {
+    this.currentBrushLineIncrement = {
       startPos: prevPos,
       endPos: currentPos
     };
-    this.lineStorage.black.line.push(this.lineIncrement)
+    this.currentBrushLine.lineIncrementList.push(this.currentBrushLineIncrement)
     this.ctx.beginPath(); 
     this.ctx.moveTo(prevPos.xPos, prevPos.yPos);
     this.ctx.lineTo(currentPos.xPos, currentPos.yPos);
     this.ctx.stroke();
   }
 
-  drawEraserLine(prevPos: Position, currentPos: Position) {
-    this.lineIncrement = {
+  drawEraserLineIncrement(prevPos: Position, currentPos: Position) {
+    this.currentEraserLineIncrement = {
       startPos: prevPos,
       endPos: currentPos
     };
-    this.lineStorage.white.line.push(this.lineIncrement)
+    this.currentEraserLine.lineIncrementList.push(this.currentEraserLineIncrement)
     this.ctx.beginPath(); 
     this.ctx.moveTo(prevPos.xPos, prevPos.yPos);
     this.ctx.lineTo(currentPos.xPos, currentPos.yPos);
@@ -429,7 +451,7 @@ export class HomeComponent implements OnInit {
     this.ctx.moveTo(startPos.xPos, startPos.yPos);
     this.ctx.quadraticCurveTo(anglePos.xPos, anglePos.yPos, endPos.xPos, endPos.yPos);
     this.ctx.stroke();
-    this.currentQuadCurve = {startXPos: startPos.xPos, startYPos: startPos.yPos, angleXPos: anglePos.xPos, angleYPos: anglePos.yPos, endXPos: endPos.xPos, endYPos: endPos.yPos}
+    this.currentQuadCurve = {name: "penLine", startXPos: startPos.xPos, startYPos: startPos.yPos, angleXPos: anglePos.xPos, angleYPos: anglePos.yPos, endXPos: endPos.xPos, endYPos: endPos.yPos}
   }
 
   drawOval(startPos: Position, currentPos: Position) {
@@ -450,7 +472,7 @@ export class HomeComponent implements OnInit {
       yCenter = startPos.yPos - yRadius
     }
 
-    this.currentOval = {xCenter: xCenter, yCenter: yCenter, xRadius: xRadius, yRadius: yRadius}
+    this.currentOval = {name: "oval", xCenter: xCenter, yCenter: yCenter, xRadius: xRadius, yRadius: yRadius}
     this.ctx.beginPath();
     this.ctx.ellipse(xCenter, yCenter, xRadius, yRadius, 0, 0, 2 * Math.PI);
     this.ctx.stroke();
@@ -459,47 +481,56 @@ export class HomeComponent implements OnInit {
   clearAndRedraw() {
     this.ctx.fillStyle = 'white';
     this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
-    this.redrawLines("black");
-    this.redrawCurves("black");
-    this.redrawOvals("black");
-    this.redrawLines("white");
+    this.lineStorage.map((currentShape: any) => {
+      switch (currentShape.name) {
+        case "brushLine":
+          this.redrawBrushLine(currentShape);
+          break;
+        case "eraserLine":
+          this.redrawEraserLine(currentShape);
+          break;
+        case "penLine":
+          this.redrawPenLine(currentShape);
+          break;
+        case "oval":
+          this.redrawOval(currentShape);
+      }
+    })
   }
 
-  redrawLines(colour: string) {
-    this.ctx.strokeStyle = colour;
-    if (colour == "white") {this.ctx.lineWidth = 25}
-    const lineList: LineIncrement[] = this.lineStorage[colour]["line"]
-    lineList.map((lineIncrement: LineIncrement) => {
+  redrawBrushLine(brushLine: BrushLine) {
+    brushLine.lineIncrementList.map((lineIncrement: LineIncrement) => {
       this.ctx.beginPath(); 
       this.ctx.moveTo(lineIncrement.startPos.xPos, lineIncrement.startPos.yPos);
       this.ctx.lineTo(lineIncrement.endPos.xPos, lineIncrement.endPos.yPos);
       this.ctx.stroke();
     })
-    this.ctx.lineWidth = 5    
-    this.ctx.strokeStyle = "black";
   }
 
-  redrawCurves(colour: string) {
-    this.ctx.strokeStyle = colour;
-    const lineList: QuadCurve[] = this.lineStorage[colour]["quadCurve"]
-    lineList.map((quadCurve: QuadCurve) => {
+  redrawEraserLine(eraserLine: EraserLine) {
+    this.ctx.strokeStyle = "white";
+    this.ctx.lineWidth = 25
+    eraserLine.lineIncrementList.map((lineIncrement: LineIncrement) => {
       this.ctx.beginPath(); 
-      this.ctx.moveTo(quadCurve.startXPos, quadCurve.startYPos);
-      this.ctx.quadraticCurveTo(quadCurve.angleXPos, quadCurve.angleYPos, quadCurve.endXPos, quadCurve.endYPos);
+      this.ctx.moveTo(lineIncrement.startPos.xPos, lineIncrement.startPos.yPos);
+      this.ctx.lineTo(lineIncrement.endPos.xPos, lineIncrement.endPos.yPos);
       this.ctx.stroke();
     })
+    this.ctx.lineWidth = 5
     this.ctx.strokeStyle = "black";
   }
 
-  redrawOvals(colour: string) {
-    this.ctx.strokeStyle = colour;
-    const lineList: Oval[] = this.lineStorage[colour]["oval"]
-    lineList.map((oval: Oval) => {
-      this.ctx.beginPath();
-      this.ctx.ellipse(oval.xCenter, oval.yCenter, oval.xRadius, oval.yRadius, 0, 0, 2 * Math.PI);
-      this.ctx.stroke();
-    })
-    this.ctx.strokeStyle = "black";
+  redrawPenLine(quadCurve: QuadCurve) {
+    this.ctx.beginPath(); 
+    this.ctx.moveTo(quadCurve.startXPos, quadCurve.startYPos);
+    this.ctx.quadraticCurveTo(quadCurve.angleXPos, quadCurve.angleYPos, quadCurve.endXPos, quadCurve.endYPos);
+    this.ctx.stroke();
+  }
+
+  redrawOval(oval: Oval) {
+    this.ctx.beginPath();
+    this.ctx.ellipse(oval.xCenter, oval.yCenter, oval.xRadius, oval.yRadius, 0, 0, 2 * Math.PI);
+    this.ctx.stroke();
   }
 
   // ##################################
@@ -580,10 +611,6 @@ export class HomeComponent implements OnInit {
     this.trashButton = document.getElementById("trash-button") as HTMLButtonElement
 
     this.initialisePageBools()
-    this.lineStorage = {
-      "black": {"line": [], "quadCurve": [], "oval": []},
-      "white": {"line": []},
-    }
   }
   
   initialisePageBools() {
