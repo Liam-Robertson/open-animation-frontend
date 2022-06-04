@@ -24,7 +24,6 @@ import { QuadCurve } from './models/QuadCurve.model';
 import { Oval } from './models/Oval.model';
 import { EraserLine } from './models/EraserLine.model';
 import { LineIncrement } from './models/LineIncrement.model';
-import { ThisReceiver } from '@angular/compiler';
 import { RefImage } from './models/RefImage.model';
 
 @Component({
@@ -50,8 +49,8 @@ export class HomeComponent implements OnInit {
 
   @ViewChild('canvasEl') canvasEl!: ElementRef<HTMLCanvasElement>;
   @ViewChild('canvasRefImage') canvasRefImage!: ElementRef<HTMLCanvasElement>;
-  ctx!: CanvasRenderingContext2D;
   imageCtx!: CanvasRenderingContext2D;
+  ctx!: CanvasRenderingContext2D;
 
   // Page buttons
   videoButton!: HTMLButtonElement;
@@ -121,6 +120,9 @@ export class HomeComponent implements OnInit {
   refImage!: HTMLImageElement;
   refImagePos: RefImage = {startXPos: 0, endXPos: 0, startYPos: 0, endYPos: 0, height: 0, width: 0}
   mousePosRelativeToImage!: Position;
+  inRefImageCheck!: boolean;
+  setEraser!: () => string;
+  removeEraser!: () => string;
 
   constructor(
     private homeService: HomeService,
@@ -132,7 +134,7 @@ export class HomeComponent implements OnInit {
     this.canvasToolBoolList.set("move", true).set("brush", false).set("pen", false).set("eraser", false).set("oval", false)
     this.intialiseVariables()
     this.pageButtonList = [this.videoButton, this.canvasButton, this.instructionsButton, this.feedbackButton]
-    this.canvasButtonList = [this.moveButton, this.brushButton, this.penButton, this.ovalButton, this.eraserButton, this.trashButton]
+    this.canvasButtonList = [this.brushButton, this.penButton, this.ovalButton, this.eraserButton, this.trashButton]
     this.videoButton.style.background =  this.darkenColour;
 
     this.commentary = (await lastValueFrom(this.homeService.getAllComments())).map(row => row.comment).reverse();
@@ -198,9 +200,8 @@ export class HomeComponent implements OnInit {
   onMouseDown(event: any) {
     if (this.moveToolBool) {
       this.currentPos = this.getPositionFromEvent(event)
-      const inRefImageXPosCheck = (this.currentPos.xPos > this.refImagePos.startXPos) && (this.currentPos.xPos < this.refImagePos.endXPos)
-      const inRefImageYPosCheck = (this.currentPos.yPos > this.refImagePos.startYPos) && (this.currentPos.yPos < this.refImagePos.endYPos)
-      if (!this.isMoveDragging && inRefImageXPosCheck && inRefImageYPosCheck) {
+      this.inRefImageCheck = (this.currentPos.xPos > this.refImagePos.startXPos) && (this.currentPos.xPos < this.refImagePos.endXPos) && (this.currentPos.yPos > this.refImagePos.startYPos) && (this.currentPos.yPos < this.refImagePos.endYPos)
+      if (!this.isMoveDragging && this.inRefImageCheck) {
         this.mousePosRelativeToImage = {xPos: this.currentPos.xPos - this.refImagePos.startXPos, yPos: this.currentPos.yPos - this.refImagePos.startYPos}
         this.isMoveDragging = true;
       }
@@ -217,7 +218,7 @@ export class HomeComponent implements OnInit {
         this.isEraserPainting = true;
         this.currentPos = this.getPositionFromEvent(event)
         this.ctx.lineWidth = 25
-        this.ctx.strokeStyle = "#FFFFFF";
+        this.setEraser()
         this.currentEraserLine = {name: "eraserLine", lineIncrementList: []}
       }
     }
@@ -251,9 +252,14 @@ export class HomeComponent implements OnInit {
 
   onMouseMove(event: any) {
     if (this.moveToolBool) {
+      this.currentPos = this.getPositionFromEvent(event)
+      this.inRefImageCheck = (this.currentPos.xPos > this.refImagePos.startXPos) && (this.currentPos.xPos < this.refImagePos.endXPos) && (this.currentPos.yPos > this.refImagePos.startYPos) && (this.currentPos.yPos < this.refImagePos.endYPos)
       if (this.isMoveDragging) {
-        this.currentPos = this.getPositionFromEvent(event)
         this.dragRefImage(this.currentPos);
+      } else if (this.inRefImageCheck) {
+        this.canvasEl.nativeElement.style.cursor = "pointer"
+      } else {
+        this.canvasEl.nativeElement.style.cursor = "auto"
       }
     }
     if (this.brushToolBool) {
@@ -302,7 +308,7 @@ export class HomeComponent implements OnInit {
       this.currentEraserLine.name = "eraserLine"
       this.lineStorage.push(this.currentEraserLine)
       this.ctx.lineWidth = 5
-      this.ctx.strokeStyle = "#000000";
+      this.removeEraser()
     }
   }
 
@@ -343,7 +349,6 @@ export class HomeComponent implements OnInit {
       this.togglePageButtons(this.canvasButton);
     } else {
       this.ctx.canvas.hidden = false;
-      this.imageCtx.canvas.hidden = false;
     }
   }
 
@@ -352,7 +357,6 @@ export class HomeComponent implements OnInit {
       this.togglePageBools("instructions");
       this.togglePageButtons(this.instructionsButton);
       this.ctx.canvas.hidden = true;
-      this.imageCtx.canvas.hidden = true;
     }
   }
 
@@ -361,7 +365,6 @@ export class HomeComponent implements OnInit {
       this.togglePageBools("video");
       this.togglePageButtons(this.videoButton);
       this.ctx.canvas.hidden = true;
-      this.imageCtx.canvas.hidden = true;
     };
   }
 
@@ -370,7 +373,6 @@ export class HomeComponent implements OnInit {
       this.togglePageBools("feedback");
       this.togglePageButtons(this.feedbackButton);
       this.ctx.canvas.hidden = true;
-      this.imageCtx.canvas.hidden = true;
     }
   }
 
@@ -408,13 +410,8 @@ export class HomeComponent implements OnInit {
   }
 
   toggleTrashTool() {
-    this.ctx.fillStyle = 'white';
-    this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
-    for (let colourKey in this.lineStorage) {
-      for (let lineTypeKey in this.lineStorage[colourKey]) {
-        this.lineStorage[colourKey][lineTypeKey] = []
-      }
-    }
+    this.ctx.clearRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
+    this.lineStorage = []
   }
 
   toggleUndoTool() {
@@ -425,7 +422,8 @@ export class HomeComponent implements OnInit {
   toggleReferenceTool() {
     let input = document.createElement('input');
     input.type = 'file';
-    this.refImage = new Image();
+    this.refImage = document.createElement("img");
+    this.refImage.setAttribute("id", "ref-image");
     input.onchange = _this => {
       this.currentFile = (input.files as FileList)[0]
       this.refImage.onload = () => {
@@ -442,7 +440,7 @@ export class HomeComponent implements OnInit {
   // ##################################
 
   drawBrushLineIncrement(prevPos: Position, currentPos: Position) {
-    this.currentBrushLineIncrement = {
+    this.currentBrushLineIncrement = {  
       startPos: prevPos,
       endPos: currentPos
     };
@@ -466,6 +464,8 @@ export class HomeComponent implements OnInit {
   }
 
   dragPenLine(startPos: Position, currentPos: Position) {
+    const penLineIncrement: LineIncrement[] = [{startPos: startPos, endPos: currentPos}]
+    const penLine: BrushLine = {name: "brushLine", lineIncrementList: penLineIncrement}
     this.clearAndRedraw();
     this.ctx.beginPath();
     this.ctx.moveTo(startPos.xPos, startPos.yPos);
@@ -510,15 +510,13 @@ export class HomeComponent implements OnInit {
     const imageTopLeft: Position = {xPos: currentPos.xPos - this.mousePosRelativeToImage.xPos, yPos: currentPos.yPos - this.mousePosRelativeToImage.yPos}
     const imageHeight = this.refImagePos.height
     const imageWidth = this.refImagePos.width
-    this.imageCtx.fillStyle = 'white';
-    this.imageCtx.fillRect(0, 0, this.imageCtx.canvas.width,  this.imageCtx.canvas.height);
+    this.imageCtx.clearRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
     this.imageCtx.drawImage(this.refImage, imageTopLeft.xPos, imageTopLeft.yPos);
     this.refImagePos = {startXPos: imageTopLeft.xPos, endXPos: imageTopLeft.xPos + imageWidth, startYPos: imageTopLeft.yPos, endYPos: imageTopLeft.yPos + imageHeight, height: imageHeight, width: imageWidth}
   }
 
   clearAndRedraw() {
-    this.ctx.fillStyle = 'white';
-    this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
+    this.ctx.clearRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
     this.lineStorage.map((currentShape: any) => {
       switch (currentShape.name) {
         case "brushLine":
@@ -534,6 +532,9 @@ export class HomeComponent implements OnInit {
           this.redrawOval(currentShape);
       }
     })
+    if (this.currentFile != null) {
+      this.imageCtx.drawImage(this.refImage, this.refImagePos.startXPos, this.refImagePos.startYPos);
+    }
   }
 
   redrawBrushLine(brushLine: BrushLine) {
@@ -626,6 +627,7 @@ export class HomeComponent implements OnInit {
         this.canvasToolBoolList.set(toolName, false)
       }
     })
+    if (currentToolName == "move") {this.canvasEl.nativeElement.style.cursor = "pointer"} else {this.canvasEl.nativeElement.style.cursor = "crosshair"}
     this.initialiseCanvasToolBools()
   }
 
@@ -666,6 +668,8 @@ export class HomeComponent implements OnInit {
     this.toggleCanvasToolButtons(this.moveButton);
     this.ctx = this.canvasEl.nativeElement.getContext('2d') as CanvasRenderingContext2D;
     this.imageCtx = this.canvasRefImage.nativeElement.getContext('2d') as CanvasRenderingContext2D;
+    this.setEraser = () => this.ctx.globalCompositeOperation = 'destination-out'
+    this.removeEraser = () => this.ctx.globalCompositeOperation = 'source-over'
     const containerWidth = document.getElementById("app-container")?.getBoundingClientRect().width
     const containerHeight = document.getElementById("app-container")?.getBoundingClientRect().height
     this.canvasEl.nativeElement.width = containerWidth as number;

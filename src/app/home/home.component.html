@@ -30,17 +30,20 @@
     </div>
     <div class="app-container" id="app-container">
         <div [hidden]="!initCanvasBool" class="canvas-container" id="canvas-container">
+            <canvas class="canvasEl" id="canvasId"
+                (mousemove)="onMouseMove($event)"
+                (mousedown)="onMouseDown($event)"
+                (mouseup)="onMouseUp()" 
+                (mouseleave)="onMouseLeave()"
+                (mouseenter)="onMouseEnter()"
+                (touchmove)="onTouchMove($event)" 
+                (touchstart)="onTouchStart($event)" 
+                (touchend)="onTouchEnd($event)" 
+                #canvasEl>
+            </canvas>
             <canvas class="canvas-ref-image" id="canvas-ref-image" 
-            (mousemove)="onMouseMove($event)"
-            (mousedown)="onMouseDown($event)"
-            (mouseup)="onMouseUp()" 
-            (mouseleave)="onMouseLeave()"
-            (mouseenter)="onMouseEnter()"
-            (touchmove)="onTouchMove($event)" 
-            (touchstart)="onTouchStart($event)" 
-            (touchend)="onTouchEnd($event)"
-            #canvasRefImage></canvas>
-            <canvas class="canvasEl" id="canvasId" #canvasEl></canvas>
+                #canvasRefImage>
+            </canvas>
         </div>
         <video [hidden]="!videoBool" id="video-container" src="#" type="video/mp4" controls></video>
         <div [hidden]="!instructionsBool" id="instructions-container">
