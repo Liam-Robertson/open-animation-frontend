@@ -1,6 +1,6 @@
-import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { HomeService } from './home.service';
-import { faEraser, faMarsStroke } from '@fortawesome/free-solid-svg-icons';
+import { faEraser } from '@fortawesome/free-solid-svg-icons';
 import { faPaintBrush } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { faCommenting } from '@fortawesome/free-solid-svg-icons';
@@ -11,6 +11,7 @@ import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { faCircle } from '@fortawesome/free-regular-svg-icons';
 import { faArrowRotateLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsUpDownLeftRight } from '@fortawesome/free-solid-svg-icons';
 import { faComments } from '@fortawesome/free-solid-svg-icons';
 import { faImages } from '@fortawesome/free-solid-svg-icons';
 import { MatDialog } from '@angular/material/dialog';
@@ -23,6 +24,8 @@ import { QuadCurve } from './models/QuadCurve.model';
 import { Oval } from './models/Oval.model';
 import { EraserLine } from './models/EraserLine.model';
 import { LineIncrement } from './models/LineIncrement.model';
+import { ThisReceiver } from '@angular/compiler';
+import { RefImage } from './models/RefImage.model';
 
 @Component({
   selector: 'home',
@@ -43,9 +46,12 @@ export class HomeComponent implements OnInit {
   faPen = faPenFancy;
   faUndo = faArrowRotateLeft;
   faImages = faImages;
+  faMove = faArrowsUpDownLeftRight;
 
   @ViewChild('canvasEl') canvasEl!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('canvasRefImage') canvasRefImage!: ElementRef<HTMLCanvasElement>;
   ctx!: CanvasRenderingContext2D;
+  imageCtx!: CanvasRenderingContext2D;
 
   // Page buttons
   videoButton!: HTMLButtonElement;
@@ -55,6 +61,7 @@ export class HomeComponent implements OnInit {
   pageButtonList: HTMLButtonElement[] = []
 
   // Canvas tool buttons
+  moveButton!: HTMLButtonElement;
   brushButton!: HTMLButtonElement;
   penButton!: HTMLButtonElement;
   ovalButton!: HTMLButtonElement;
@@ -71,7 +78,8 @@ export class HomeComponent implements OnInit {
   canvasToolBoolList: Map<string, boolean> = new Map();
 
   // Hide Page Bools
-  brushToolBool: boolean = true;
+  moveToolBool: boolean = true;
+  brushToolBool: boolean = false;
   eraserToolBool: boolean = false;
   penToolBool: boolean = false;
   ovalToolBool: boolean = false;
@@ -82,6 +90,7 @@ export class HomeComponent implements OnInit {
   isPenLineDragging: boolean = false;
   isEraserPainting: boolean = false
   isOvalPainting: boolean = false;
+  isMoveDragging: boolean = false;
 
   // Position Variables
   startPos!: Position | null;
@@ -107,7 +116,11 @@ export class HomeComponent implements OnInit {
   loading: boolean = false;
   commentary!: string[]
   currentComment!: string;
-  currentFile!: File | null;
+  fileList: File[] = [];
+  currentFile!: File;
+  refImage!: HTMLImageElement;
+  refImagePos: RefImage = {startXPos: 0, endXPos: 0, startYPos: 0, endYPos: 0, height: 0, width: 0}
+  mousePosRelativeToImage!: Position;
 
   constructor(
     private homeService: HomeService,
@@ -116,14 +129,13 @@ export class HomeComponent implements OnInit {
 
   async ngOnInit() {
     this.pageBoolList.set("video", true).set("canvas", false).set("feedback", false).set("instructions", false)
-    this.canvasToolBoolList.set("brush", true).set("pen", false).set("eraser", false).set("oval", false)
+    this.canvasToolBoolList.set("move", true).set("brush", false).set("pen", false).set("eraser", false).set("oval", false)
     this.intialiseVariables()
     this.pageButtonList = [this.videoButton, this.canvasButton, this.instructionsButton, this.feedbackButton]
-    this.canvasButtonList = [this.brushButton, this.penButton, this.ovalButton, this.eraserButton, this.trashButton]
+    this.canvasButtonList = [this.moveButton, this.brushButton, this.penButton, this.ovalButton, this.eraserButton, this.trashButton]
+    this.videoButton.style.background =  this.darkenColour;
 
     this.commentary = (await lastValueFrom(this.homeService.getAllComments())).map(row => row.comment).reverse();
-    this.videoButton.style.background =  this.darkenColour;
-    this.brushButton.style.background =  this.darkenColour;
 
     this.homeService.getTapestry().subscribe((tapestry: Blob) => {
       const tapestryEl = document.getElementById("video-container") as HTMLVideoElement
@@ -184,20 +196,13 @@ export class HomeComponent implements OnInit {
   }
 
   onMouseDown(event: any) {
-    if (this.penToolBool) { 
-      if (this.isPenLinePainting) {
-        this.quadCurveEndPos = this.currentPos
-        this.isPenLinePainting = false
-        this.isPenLineDragging = true
-      } 
-      else if (this.isPenLineDragging) {
-        this.isPenLineDragging = false
-        this.lineStorage.push(this.currentQuadCurve)
-      }
-      else if (!this.isPenLinePainting && !this.isPenLineDragging) {
-        this.startPos = this.getPositionFromEvent(event)
-        this.currentPos = this.getPositionFromEvent(event)
-        this.isPenLinePainting = true
+    if (this.moveToolBool) {
+      this.currentPos = this.getPositionFromEvent(event)
+      const inRefImageXPosCheck = (this.currentPos.xPos > this.refImagePos.startXPos) && (this.currentPos.xPos < this.refImagePos.endXPos)
+      const inRefImageYPosCheck = (this.currentPos.yPos > this.refImagePos.startYPos) && (this.currentPos.yPos < this.refImagePos.endYPos)
+      if (!this.isMoveDragging && inRefImageXPosCheck && inRefImageYPosCheck) {
+        this.mousePosRelativeToImage = {xPos: this.currentPos.xPos - this.refImagePos.startXPos, yPos: this.currentPos.yPos - this.refImagePos.startYPos}
+        this.isMoveDragging = true;
       }
     }
     if (this.brushToolBool) {
@@ -216,6 +221,22 @@ export class HomeComponent implements OnInit {
         this.currentEraserLine = {name: "eraserLine", lineIncrementList: []}
       }
     }
+    if (this.penToolBool) { 
+      if (this.isPenLinePainting) {
+        this.quadCurveEndPos = this.currentPos
+        this.isPenLinePainting = false
+        this.isPenLineDragging = true
+      } 
+      else if (this.isPenLineDragging) {
+        this.isPenLineDragging = false
+        this.lineStorage.push(this.currentQuadCurve)
+      }
+      else if (!this.isPenLinePainting && !this.isPenLineDragging) {
+        this.startPos = this.getPositionFromEvent(event)
+        this.currentPos = this.getPositionFromEvent(event)
+        this.isPenLinePainting = true
+      }
+    }
     if (this.ovalToolBool) {
       if (!this.isOvalPainting) {
         this.isOvalPainting = true;
@@ -229,16 +250,12 @@ export class HomeComponent implements OnInit {
   }
 
   onMouseMove(event: any) {
-    if (this.penToolBool) {
-      if (this.isPenLinePainting) {
+    if (this.moveToolBool) {
+      if (this.isMoveDragging) {
         this.currentPos = this.getPositionFromEvent(event)
-        this.dragPenLine(this.startPos as Position, this.currentPos);
+        this.dragRefImage(this.currentPos);
       }
-      else if (this.isPenLineDragging) {
-        this.currentPos = this.getPositionFromEvent(event)
-        this.dragPenCurve(this.startPos as Position, this.currentPos, this.quadCurveEndPos)
-      } 
-    } 
+    }
     if (this.brushToolBool) {
       if (this.isBrushPainting) {
         this.prevPos = this.currentPos
@@ -253,6 +270,16 @@ export class HomeComponent implements OnInit {
         this.drawEraserLineIncrement(this.prevPos, this.currentPos);
       }
     }
+    if (this.penToolBool) {
+      if (this.isPenLinePainting) {
+        this.currentPos = this.getPositionFromEvent(event)
+        this.dragPenLine(this.startPos as Position, this.currentPos);
+      }
+      else if (this.isPenLineDragging) {
+        this.currentPos = this.getPositionFromEvent(event)
+        this.dragPenCurve(this.startPos as Position, this.currentPos, this.quadCurveEndPos)
+      } 
+    } 
     if (this.ovalToolBool) {
       if (this.isOvalPainting) {
         this.drawOval(this.startPos as Position, this.currentPos);
@@ -262,11 +289,13 @@ export class HomeComponent implements OnInit {
   }
 
   onMouseUp() {
+    if (this.isMoveDragging) {
+      this.isMoveDragging = false;
+    }
     if (this.isBrushPainting) {
       this.isBrushPainting = false;
       this.currentBrushLine.name = "brushLine"
       this.lineStorage.push(this.currentBrushLine)
-      console.log(this.lineStorage);
     }
     if (this.isEraserPainting) {
       this.isEraserPainting = false;
@@ -274,7 +303,6 @@ export class HomeComponent implements OnInit {
       this.lineStorage.push(this.currentEraserLine)
       this.ctx.lineWidth = 5
       this.ctx.strokeStyle = "#000000";
-      console.log(this.lineStorage);
     }
   }
 
@@ -310,10 +338,12 @@ export class HomeComponent implements OnInit {
   toggleCanvas() {
     this.togglePageBools("canvas");
     if (!this.initCanvasBool) {
-      this.togglePageButtons(this.canvasButton);
       this.initCanvasVariables();
+      this.togglePageBools("canvas");
+      this.togglePageButtons(this.canvasButton);
     } else {
       this.ctx.canvas.hidden = false;
+      this.imageCtx.canvas.hidden = false;
     }
   }
 
@@ -322,6 +352,7 @@ export class HomeComponent implements OnInit {
       this.togglePageBools("instructions");
       this.togglePageButtons(this.instructionsButton);
       this.ctx.canvas.hidden = true;
+      this.imageCtx.canvas.hidden = true;
     }
   }
 
@@ -330,6 +361,7 @@ export class HomeComponent implements OnInit {
       this.togglePageBools("video");
       this.togglePageButtons(this.videoButton);
       this.ctx.canvas.hidden = true;
+      this.imageCtx.canvas.hidden = true;
     };
   }
 
@@ -338,12 +370,18 @@ export class HomeComponent implements OnInit {
       this.togglePageBools("feedback");
       this.togglePageButtons(this.feedbackButton);
       this.ctx.canvas.hidden = true;
+      this.imageCtx.canvas.hidden = true;
     }
   }
 
 // ##################################
 // Toggle Canvas Tools
 // ##################################
+  
+  toggleMoveTool() {
+    this.toggleCanvasToolButtons(this.moveButton);
+    this.toggleCanvasToolBools("move");
+  }
 
   toggleBrushTool() {
     this.toggleCanvasToolButtons(this.brushButton);
@@ -382,31 +420,21 @@ export class HomeComponent implements OnInit {
   toggleUndoTool() {
     this.lineStorage.pop()
     this.clearAndRedraw()
-    console.log(this.lineStorage);
   }
 
   toggleReferenceTool() {
     let input = document.createElement('input');
     input.type = 'file';
+    this.refImage = new Image();
     input.onchange = _this => {
-              this.currentFile = (input.files as FileList)[0]
-          };
-    input.click();
-
-    if(this.currentFile != null) {
-      const ctx = this.ctx
-      const canvas = this.canvasEl.nativeElement
-      var reader = new FileReader()
-      reader.readAsDataURL(this.currentFile)
-      reader.onloadend = function (e) {
-        var myImage = new Image()
-        myImage.src = reader.result as string
-        myImage.onload = function(ev) {
-          ctx.drawImage(myImage, 0, 0)
-          canvas.toDataURL("image/jpeg", 0.75)
+      this.currentFile = (input.files as FileList)[0]
+      this.refImage.onload = () => {
+          this.imageCtx.drawImage(this.refImage, 0, 0);
+          this.refImagePos = {startXPos: 0, endXPos: this.refImage.width, startYPos: 0, endYPos: this.refImage.height, height: this.refImage.height, width: this.refImage.width}
         }
-      }
-    }
+      this.refImage.src = URL.createObjectURL(this.currentFile);
+    };
+    input.click();
   }
 
   // ##################################
@@ -476,6 +504,16 @@ export class HomeComponent implements OnInit {
     this.ctx.beginPath();
     this.ctx.ellipse(xCenter, yCenter, xRadius, yRadius, 0, 0, 2 * Math.PI);
     this.ctx.stroke();
+  }
+
+  dragRefImage(currentPos: Position) {
+    const imageTopLeft: Position = {xPos: currentPos.xPos - this.mousePosRelativeToImage.xPos, yPos: currentPos.yPos - this.mousePosRelativeToImage.yPos}
+    const imageHeight = this.refImagePos.height
+    const imageWidth = this.refImagePos.width
+    this.imageCtx.fillStyle = 'white';
+    this.imageCtx.fillRect(0, 0, this.imageCtx.canvas.width,  this.imageCtx.canvas.height);
+    this.imageCtx.drawImage(this.refImage, imageTopLeft.xPos, imageTopLeft.yPos);
+    this.refImagePos = {startXPos: imageTopLeft.xPos, endXPos: imageTopLeft.xPos + imageWidth, startYPos: imageTopLeft.yPos, endYPos: imageTopLeft.yPos + imageHeight, height: imageHeight, width: imageWidth}
   }
 
   clearAndRedraw() {
@@ -592,6 +630,7 @@ export class HomeComponent implements OnInit {
   }
 
   initialiseCanvasToolBools() {
+    this.moveToolBool = this.canvasToolBoolList.get("move") as boolean;
     this.brushToolBool = this.canvasToolBoolList.get("brush") as boolean;
     this.penToolBool = this.canvasToolBoolList.get("pen") as boolean;
     this.eraserToolBool = this.canvasToolBoolList.get("eraser") as boolean;
@@ -604,6 +643,7 @@ export class HomeComponent implements OnInit {
     this.instructionsButton = document.getElementById("instructions-button") as HTMLButtonElement
     this.feedbackButton = document.getElementById("feedback-button") as HTMLButtonElement
 
+    this.moveButton = document.getElementById("move-button") as HTMLButtonElement
     this.brushButton = document.getElementById("brush-button") as HTMLButtonElement
     this.penButton = document.getElementById("pen-button") as HTMLButtonElement
     this.ovalButton = document.getElementById("oval-button") as HTMLButtonElement
@@ -622,13 +662,16 @@ export class HomeComponent implements OnInit {
 
   initCanvasVariables() {
     this.initCanvasBool = true;
+    this.toggleCanvasToolBools("move");
+    this.toggleCanvasToolButtons(this.moveButton);
     this.ctx = this.canvasEl.nativeElement.getContext('2d') as CanvasRenderingContext2D;
+    this.imageCtx = this.canvasRefImage.nativeElement.getContext('2d') as CanvasRenderingContext2D;
     const containerWidth = document.getElementById("app-container")?.getBoundingClientRect().width
     const containerHeight = document.getElementById("app-container")?.getBoundingClientRect().height
     this.canvasEl.nativeElement.width = containerWidth as number;
     this.canvasEl.nativeElement.height = containerHeight as number;
-    this.ctx.fillStyle = 'white';
-    this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
+    this.canvasRefImage.nativeElement.width = containerWidth as number;
+    this.canvasRefImage.nativeElement.height = containerHeight as number;
     this.ctx.lineJoin = 'round'
     this.ctx.lineCap = 'round';
     this.ctx.lineWidth = 5;
