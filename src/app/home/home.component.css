@@ -154,12 +154,11 @@ button {
 }
 
 .canvasEl {
-    z-index: 2; 
+    z-index: 3; 
     grid-column: 1;
     grid-row: 1;
     border: 1px solid black;
     border-radius: 0.2em;
-    /* opacity: 0.5; */
 }
 
 .canvasEl:hover {
@@ -175,8 +174,15 @@ button {
     border-radius: 0.2em;
 }
 
-#ref-image {
-    opacity: 0.5;
+.image-corners {
+    position: relative;
+    z-index: 2; 
+    grid-column: 1;
+    grid-row: 1;
+    height: 0.35em;
+    width: 0.35em;
+    background-color: white;
+    border: 0.1em solid black; 
 }
 
 #feedback-container .text-container {
@@ -269,4 +275,3 @@ button {
 mat-icon {
     margin-right: 0.5em;
 }
-

@@ -25,6 +25,7 @@ import { Oval } from './models/Oval.model';
 import { EraserLine } from './models/EraserLine.model';
 import { LineIncrement } from './models/LineIncrement.model';
 import { RefImage } from './models/RefImage.model';
+import { ImageCorners } from './models/ImageCorners.model';
 
 @Component({
   selector: 'home',
@@ -123,6 +124,15 @@ export class HomeComponent implements OnInit {
   inRefImageCheck!: boolean;
   setEraser!: () => string;
   removeEraser!: () => string;
+  activeCornersList: RefImage[] = [];
+  cornerHeightWidthEm: number = 0.175;
+  imageCorners: ImageCorners = {topLeft: {startXPos: 0, endXPos: 0, xCenter: 0, startYPos: 0, endYPos: 0, yCenter: 0}, topRight: {startXPos: 0, endXPos: 0, xCenter: 0, startYPos: 0, endYPos: 0, yCenter: 0}, bottomLeft: {startXPos: 0, endXPos: 0, xCenter: 0, startYPos: 0, endYPos: 0, yCenter: 0}, bottomRight: {startXPos: 0, endXPos: 0, xCenter: 0, startYPos: 0, endYPos: 0, yCenter: 0}}
+  cornerRadius!: number;
+  nwMouseCheck!: boolean;
+  isImageSelected!: boolean;
+  neMouseCheck!: boolean;
+  seMouseCheck!: boolean;
+  swMouseCheck!: boolean;
 
   constructor(
     private homeService: HomeService,
@@ -134,7 +144,7 @@ export class HomeComponent implements OnInit {
     this.canvasToolBoolList.set("move", true).set("brush", false).set("pen", false).set("eraser", false).set("oval", false)
     this.intialiseVariables()
     this.pageButtonList = [this.videoButton, this.canvasButton, this.instructionsButton, this.feedbackButton]
-    this.canvasButtonList = [this.brushButton, this.penButton, this.ovalButton, this.eraserButton, this.trashButton]
+    this.canvasButtonList = [this.moveButton, this.brushButton, this.penButton, this.ovalButton, this.eraserButton, this.trashButton]
     this.videoButton.style.background =  this.darkenColour;
 
     this.commentary = (await lastValueFrom(this.homeService.getAllComments())).map(row => row.comment).reverse();
@@ -201,9 +211,18 @@ export class HomeComponent implements OnInit {
     if (this.moveToolBool) {
       this.currentPos = this.getPositionFromEvent(event)
       this.inRefImageCheck = (this.currentPos.xPos > this.refImagePos.startXPos) && (this.currentPos.xPos < this.refImagePos.endXPos) && (this.currentPos.yPos > this.refImagePos.startYPos) && (this.currentPos.yPos < this.refImagePos.endYPos)
-      if (!this.isMoveDragging && this.inRefImageCheck) {
-        this.mousePosRelativeToImage = {xPos: this.currentPos.xPos - this.refImagePos.startXPos, yPos: this.currentPos.yPos - this.refImagePos.startYPos}
+      if (this.inRefImageCheck) {
+        this.isImageSelected = true;
         this.isMoveDragging = true;
+        this.mousePosRelativeToImage = {xPos: this.currentPos.xPos - this.refImagePos.startXPos, yPos: this.currentPos.yPos - this.refImagePos.startYPos};
+        (document.getElementById("corner-0") as HTMLElement).hidden = false;
+        this.cornerRadius = (document.getElementById("corner-0")?.offsetHeight as number) / 2
+        this.activateCornerSquares(this.refImagePos)
+      }
+      if (this.inRefImageCheck) {
+        this.isImageSelected = true;
+      } else {
+        this.isImageSelected = true;
       }
     }
     if (this.brushToolBool) {
@@ -254,12 +273,31 @@ export class HomeComponent implements OnInit {
     if (this.moveToolBool) {
       this.currentPos = this.getPositionFromEvent(event)
       this.inRefImageCheck = (this.currentPos.xPos > this.refImagePos.startXPos) && (this.currentPos.xPos < this.refImagePos.endXPos) && (this.currentPos.yPos > this.refImagePos.startYPos) && (this.currentPos.yPos < this.refImagePos.endYPos)
+      this.nwMouseCheck = (this.currentPos.xPos > this.imageCorners.topLeft.startXPos) && (this.currentPos.xPos < this.imageCorners.topLeft.endXPos) && (this.currentPos.yPos > this.imageCorners.topLeft.startYPos) && (this.currentPos.yPos < this.imageCorners.topLeft.endYPos)
+      this.neMouseCheck = (this.currentPos.xPos > this.imageCorners.topRight.startXPos) && (this.currentPos.xPos < this.imageCorners.topRight.endXPos) && (this.currentPos.yPos > this.imageCorners.topRight.startYPos) && (this.currentPos.yPos < this.imageCorners.topRight.endYPos)
+      this.seMouseCheck = (this.currentPos.xPos > this.imageCorners.bottomRight.startXPos) && (this.currentPos.xPos < this.imageCorners.bottomRight.endXPos) && (this.currentPos.yPos > this.imageCorners.bottomRight.startYPos) && (this.currentPos.yPos < this.imageCorners.bottomRight.endYPos)
+      this.swMouseCheck = (this.currentPos.xPos > this.imageCorners.bottomLeft.startXPos) && (this.currentPos.xPos < this.imageCorners.bottomLeft.endXPos) && (this.currentPos.yPos > this.imageCorners.bottomLeft.startYPos) && (this.currentPos.yPos < this.imageCorners.bottomLeft.endYPos)
+      
       if (this.isMoveDragging) {
         this.dragRefImage(this.currentPos);
-      } else if (this.inRefImageCheck) {
+        this.activateCornerSquares(this.refImagePos)
+      } 
+      if (this.inRefImageCheck) {
         this.canvasEl.nativeElement.style.cursor = "pointer"
       } else {
         this.canvasEl.nativeElement.style.cursor = "auto"
+      }
+      if (this.nwMouseCheck) {
+        this.canvasEl.nativeElement.style.cursor = "nw-resize"
+      }
+      if (this.neMouseCheck) {
+        this.canvasEl.nativeElement.style.cursor = "ne-resize"
+      }
+      if (this.seMouseCheck) {
+        this.canvasEl.nativeElement.style.cursor = "se-resize"
+      }
+      if (this.swMouseCheck) {
+        this.canvasEl.nativeElement.style.cursor = "sw-resize"
       }
     }
     if (this.brushToolBool) {
@@ -348,7 +386,8 @@ export class HomeComponent implements OnInit {
       this.togglePageBools("canvas");
       this.togglePageButtons(this.canvasButton);
     } else {
-      this.ctx.canvas.hidden = false;
+      this.ctx.canvas.hidden = true;
+      this.imageCtx.canvas.hidden = true;
     }
   }
 
@@ -357,6 +396,7 @@ export class HomeComponent implements OnInit {
       this.togglePageBools("instructions");
       this.togglePageButtons(this.instructionsButton);
       this.ctx.canvas.hidden = true;
+      this.imageCtx.canvas.hidden = true;
     }
   }
 
@@ -365,6 +405,7 @@ export class HomeComponent implements OnInit {
       this.togglePageBools("video");
       this.togglePageButtons(this.videoButton);
       this.ctx.canvas.hidden = true;
+      this.imageCtx.canvas.hidden = true;
     };
   }
 
@@ -373,6 +414,7 @@ export class HomeComponent implements OnInit {
       this.togglePageBools("feedback");
       this.togglePageButtons(this.feedbackButton);
       this.ctx.canvas.hidden = true;
+      this.imageCtx.canvas.hidden = true;
     }
   }
 
@@ -586,6 +628,40 @@ export class HomeComponent implements OnInit {
       yPos: canvasYPos
     };
     return position
+  }
+
+  activateCornerSquares(refImagePos: RefImage) {
+    for (let i = 0; i < 4; i++) {
+      this.activeCornersList.push(refImagePos)
+    }
+    this.initCornerSquares(refImagePos)
+  }
+
+  initCornerSquares(refImagePos: RefImage) {
+    this.imageCorners.topLeft.startXPos = (refImagePos.startXPos - this.cornerRadius);
+    this.imageCorners.topLeft.endXPos = (refImagePos.startXPos + this.cornerRadius);
+    this.imageCorners.topLeft.xCenter = refImagePos.startXPos;
+    this.imageCorners.topLeft.startYPos = (refImagePos.startYPos - this.cornerRadius);
+    this.imageCorners.topLeft.endYPos = (refImagePos.startYPos + this.cornerRadius);
+    this.imageCorners.topLeft.yCenter = refImagePos.startYPos;
+    this.imageCorners.topRight.startXPos = (refImagePos.endXPos - this.cornerRadius);
+    this.imageCorners.topRight.endXPos = (refImagePos.endXPos + this.cornerRadius);
+    this.imageCorners.topRight.xCenter = refImagePos.endXPos;
+    this.imageCorners.topRight.startYPos = (refImagePos.startYPos - this.cornerRadius);
+    this.imageCorners.topRight.endYPos = (refImagePos.startYPos + this.cornerRadius);
+    this.imageCorners.topRight.yCenter = refImagePos.startYPos;
+    this.imageCorners.bottomLeft.startXPos = (refImagePos.startXPos - this.cornerRadius);
+    this.imageCorners.bottomLeft.endXPos = (refImagePos.startXPos + this.cornerRadius);
+    this.imageCorners.bottomLeft.xCenter = refImagePos.startXPos;
+    this.imageCorners.bottomLeft.startYPos = (refImagePos.endYPos - this.cornerRadius);
+    this.imageCorners.bottomLeft.endYPos = (refImagePos.endYPos + this.cornerRadius);
+    this.imageCorners.bottomLeft.yCenter = refImagePos.endYPos;
+    this.imageCorners.bottomRight.startXPos = (refImagePos.endXPos - this.cornerRadius);
+    this.imageCorners.bottomRight.endXPos = (refImagePos.endXPos + this.cornerRadius);
+    this.imageCorners.bottomRight.xCenter = refImagePos.endXPos;
+    this.imageCorners.bottomRight.startYPos = (refImagePos.endYPos - this.cornerRadius);
+    this.imageCorners.bottomRight.endYPos = (refImagePos.endYPos + this.cornerRadius);
+    this.imageCorners.bottomRight.yCenter = refImagePos.endYPos;
   }
 
   togglePageButtons(currentPageButton: HTMLButtonElement) {

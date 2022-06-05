@@ -41,6 +41,10 @@
                 (touchend)="onTouchEnd($event)" 
                 #canvasEl>
             </canvas>
+            <div class="image-corners" id="corner-0" [hidden]="!isImageSelected" [style.left]="imageCorners.topLeft.startXPos + 'px'" [style.top]="imageCorners.topLeft.startYPos + 'px'"></div>
+            <div class="image-corners" id="corner-1" [hidden]="!isImageSelected" [style.left]="imageCorners.topRight.startXPos + 'px'" [style.top]="imageCorners.topRight.startYPos + 'px'"></div>
+            <div class="image-corners" id="corner-2" [hidden]="!isImageSelected" [style.left]="imageCorners.bottomLeft.startXPos + 'px'" [style.top]="imageCorners.bottomLeft.startYPos + 'px'"></div>
+            <div class="image-corners" id="corner-3" [hidden]="!isImageSelected" [style.left]="imageCorners.bottomRight.startXPos + 'px'" [style.top]="imageCorners.bottomRight.startYPos + 'px'"></div>
             <canvas class="canvas-ref-image" id="canvas-ref-image" 
                 #canvasRefImage>
             </canvas>
