@@ -134,7 +134,6 @@ export class HomeComponent implements OnInit {
   seMouseCheck!: boolean;
   swMouseCheck!: boolean;
   resizingRefImage!: boolean;
-  currentCorner!: Rectangle;
   inCornerCheck!: boolean;
   startResizingImagePos!: RefImagePos;
 
@@ -222,9 +221,6 @@ export class HomeComponent implements OnInit {
       this.inCornerCheck = this.nwMouseCheck || this.neMouseCheck || this.seMouseCheck || this.swMouseCheck
       
       if (this.inRefImageCheck && !this.inCornerCheck) {
-        console.log(this.refImagePos);
-        
-        this.isImageSelected = true;
         this.isMoveDragging = true;
         this.mousePosRelativeToImage = {xPos: this.currentPos.xPos - this.refImagePos.startXPos, yPos: this.currentPos.yPos - this.refImagePos.startYPos};
         (document.getElementById("corner-0") as HTMLElement).hidden = false;
@@ -234,21 +230,9 @@ export class HomeComponent implements OnInit {
       if (this.inCornerCheck) {
         this.activateCornerSquares(this.refImagePos)
         this.resizingRefImage = true;
-        this.startResizingImagePos = this.refImagePos;
-        if (this.nwMouseCheck) {
-          this.currentCorner = this.imageCorners.topLeft
-        }
-        if (this.neMouseCheck) {
-          this.currentCorner = this.imageCorners.topRight
-        }
-        if (this.swMouseCheck) {
-          this.currentCorner = this.imageCorners.bottomLeft
-        }
-        if (this.seMouseCheck) {
-          this.currentCorner = this.imageCorners.bottomRight
-        }
+        this.startResizingImagePos = JSON.parse(JSON.stringify(this.refImagePos));
       }
-      if (this.inRefImageCheck) {
+      if (this.inRefImageCheck || this.inCornerCheck) {
         this.isImageSelected = true;
       } else {
         this.isImageSelected = false;
@@ -312,7 +296,8 @@ export class HomeComponent implements OnInit {
         this.initCornerSquares(this.refImagePos)
       } 
       if (this.resizingRefImage) {
-        this.resizeRefImage(this.currentPos, this.refImage, this.startResizingImagePos, this.refImagePos, this.currentCorner)
+        this.isImageSelected = true;
+        this.resizeRefImage(this.currentPos, this.refImage, this.startResizingImagePos, this.refImagePos)
         this.initCornerSquares(this.refImagePos)
       }
       if (this.inRefImageCheck) {
@@ -674,25 +659,22 @@ export class HomeComponent implements OnInit {
     this.refImagePos = {startXPos: imageTopLeft.xPos, endXPos: imageTopLeft.xPos + imageWidth, startYPos: imageTopLeft.yPos, endYPos: imageTopLeft.yPos + imageHeight, centerX: imageCenter.xPos, centerY: imageCenter.yPos, height: imageHeight, width: imageWidth}
   }
 
-  resizeRefImage(currentPos: Position, refImage: HTMLImageElement, startResizingImagePos: RefImagePos, refImagePos: RefImagePos, cornerCenter: Rectangle) {
-    for (let i = 1; i < 4; i++) {
+  resizeRefImage(currentPos: Position, refImage: HTMLImageElement, startResizingImagePos: RefImagePos, refImagePos: RefImagePos) {
       const distanceInitialImageCenterToCorner = ((startResizingImagePos.width / 2) ** 2 + (startResizingImagePos.height / 2) ** 2) ** 0.5
-      const distanceImageCenterToCursor = (((currentPos.xPos - startResizingImagePos.centerX) ** 2 + (currentPos.yPos - startResizingImagePos.centerY) ** 2) ** 0.5) / 3 * i
+      const distanceImageCenterToCursor = (((currentPos.xPos - startResizingImagePos.centerX) ** 2 + (currentPos.yPos - startResizingImagePos.centerY) ** 2) ** 0.5)
       const scale = distanceImageCenterToCursor / distanceInitialImageCenterToCorner
-
-      this.refImagePos.startXPos = refImagePos.startXPos
+      
+      this.refImagePos.height = startResizingImagePos.height * scale
+      this.refImagePos.width = startResizingImagePos.width * scale
+      this.refImagePos.startXPos = (refImagePos.startXPos)
       this.refImagePos.endXPos = (refImagePos.startXPos) + (refImagePos.width)
       this.refImagePos.startYPos = refImagePos.startYPos 
       this.refImagePos.endYPos = (refImagePos.startYPos) + (refImagePos.height)
-      this.refImagePos.height = refImagePos.height * scale
-      this.refImagePos.width = refImagePos.width * scale
       this.refImagePos.centerX = (refImagePos.startXPos) + (refImagePos.width / 2)
       this.refImagePos.centerY = (refImagePos.startYPos) + (refImagePos.height / 2)
-      this.mousePosRelativeToImage = {xPos: this.currentPos.xPos - this.refImagePos.startXPos, yPos: this.currentPos.yPos - this.refImagePos.startYPos};
 
       this.imageCtx.clearRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
       this.imageCtx.drawImage(refImage, this.refImagePos.startXPos, this.refImagePos.startYPos, this.refImagePos.width, this.refImagePos.height);      
-    }
   }
 
   initCornerSquares(refImagePos: RefImagePos) {
