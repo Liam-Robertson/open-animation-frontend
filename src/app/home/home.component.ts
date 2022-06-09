@@ -666,9 +666,9 @@ export class HomeComponent implements OnInit {
       
       this.refImagePos.height = startResizingImagePos.height * scale
       this.refImagePos.width = startResizingImagePos.width * scale
-      this.refImagePos.startXPos = (refImagePos.startXPos)
+      this.refImagePos.startXPos = (startResizingImagePos.startXPos) - ((refImagePos.width - startResizingImagePos.width) / 2)
       this.refImagePos.endXPos = (refImagePos.startXPos) + (refImagePos.width)
-      this.refImagePos.startYPos = refImagePos.startYPos 
+      this.refImagePos.startYPos = startResizingImagePos.startYPos - ((refImagePos.height - startResizingImagePos.height) / 2)
       this.refImagePos.endYPos = (refImagePos.startYPos) + (refImagePos.height)
       this.refImagePos.centerX = (refImagePos.startXPos) + (refImagePos.width / 2)
       this.refImagePos.centerY = (refImagePos.startYPos) + (refImagePos.height / 2)
@@ -744,6 +744,7 @@ export class HomeComponent implements OnInit {
       }
     })
     if (currentToolName == "move") {this.canvasEl.nativeElement.style.cursor = "pointer"} else {this.canvasEl.nativeElement.style.cursor = "crosshair"}
+    this.isImageSelected = false;
     this.initialiseCanvasToolBools()
   }
 
