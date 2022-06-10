@@ -159,6 +159,23 @@ export class HomeComponent implements OnInit {
 // ##################################
 
   uploadSnippet() {
+    this.ctx.fillStyle = "white";
+    this.ctx.fillRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
+    this.lineStorage.map((currentShape: any) => {
+      switch (currentShape.name) {
+        case "brushLine":
+          this.redrawBrushLine(currentShape);
+          break;
+        case "eraserLine":
+          this.redrawEraserLine(currentShape);
+          break;
+        case "penLine":
+          this.redrawPenLine(currentShape);
+          break;
+        case "oval":
+          this.redrawOval(currentShape);
+      }
+    })
     const dialogRef = this.dialog.open(UploadPopupComponent, {
       data: {startTime: this.startTime, endTime: this.endTime, submitBool: false},
     });
