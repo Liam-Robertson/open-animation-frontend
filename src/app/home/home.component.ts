@@ -58,7 +58,6 @@ export class HomeComponent implements OnInit {
   canvasButton!: HTMLButtonElement;
   instructionsButton!: HTMLButtonElement;
   feedbackButton!: HTMLButtonElement;
-  pageButtonList: HTMLButtonElement[] = []
 
   // Canvas tool buttons
   moveButton!: HTMLButtonElement;
@@ -67,15 +66,14 @@ export class HomeComponent implements OnInit {
   ovalButton!: HTMLButtonElement;
   eraserButton!: HTMLButtonElement;
   trashButton!: HTMLButtonElement;
-  canvasButtonList: HTMLButtonElement[] = []
 
   // Hide Page Bools
   videoBool!: boolean;
   canvasBool!: boolean;
   feedbackBool!: boolean;
   instructionsBool!: boolean;
-  pageBoolList: Map<string, boolean> = new Map();
-  canvasToolBoolList: Map<string, boolean> = new Map();
+  pageList: Map<string, {"bool": boolean, "button": HTMLButtonElement}> = new Map();
+  canvasToolList: Map<string, {"bool": boolean, "button": HTMLButtonElement}> = new Map();
 
   // Hide Page Bools
   moveToolBool: boolean = true;
@@ -143,11 +141,9 @@ export class HomeComponent implements OnInit {
   ) { }
 
   async ngOnInit() {
-    this.pageBoolList.set("video", true).set("canvas", false).set("feedback", false).set("instructions", false)
-    this.canvasToolBoolList.set("move", true).set("brush", false).set("pen", false).set("eraser", false).set("oval", false)
     this.intialiseVariables()
-    this.pageButtonList = [this.videoButton, this.canvasButton, this.instructionsButton, this.feedbackButton]
-    this.canvasButtonList = [this.moveButton, this.brushButton, this.penButton, this.ovalButton, this.eraserButton, this.trashButton]
+    this.pageList.set("video", {"bool": this.videoBool, "button": this.videoButton}).set("canvas", {"bool": this.canvasBool, "button": this.canvasButton}).set("feedback", {"bool": this.feedbackBool, "button": this.feedbackButton}).set("instructions", {"bool": this.instructionsBool, "button": this.instructionsButton})
+    this.canvasToolList.set("move", {"bool": this.moveToolBool, "button": this.moveButton}).set("brush", {"bool": this.brushToolBool, "button": this.brushButton}).set("pen", {"bool": this.penToolBool, "button": this.penButton}).set("eraser", {"bool": this.eraserToolBool, "button": this.eraserButton}).set("oval", {"bool": this.ovalToolBool, "button": this.ovalButton})
     this.videoButton.style.background =  this.darkenColour;
 
     this.commentary = (await lastValueFrom(this.homeService.getAllComments())).map(row => row.comment).reverse();
@@ -397,79 +393,75 @@ export class HomeComponent implements OnInit {
   }
 
 // ##################################
-// Toggle Pages
+// Toggle Utilities
 // ##################################
 
-  toggleCanvas() {
-    this.togglePageBools("canvas");
-    if (!this.initCanvasBool) {
+  togglePage(currentPage: string) {
+    this.pageList.forEach((pageValues: {bool: boolean, button: HTMLButtonElement}, pageName: string) => {
+      if (pageName == currentPage) {        
+        (this.pageList.get(pageName) as {bool: boolean, button: HTMLButtonElement}).bool = true;
+        (this.pageList.get(pageName) as {bool: boolean, button: HTMLButtonElement}).button.style.background = this.darkenColour;
+      } else {
+        (this.pageList.get(pageName) as {bool: boolean, button: HTMLButtonElement}).bool = false;
+        (this.pageList.get(pageName) as {bool: boolean, button: HTMLButtonElement}).button.style.background = this.standardColour;
+      }
+    })
+    if (this.isImageSelected && currentPage != "canvas") {this.isImageSelected = false}
+
+    this.videoBool = this.pageList.get("video")?.bool as boolean;
+    this.canvasBool = this.pageList.get("canvas")?.bool as boolean;
+    this.feedbackBool = this.pageList.get("feedback")?.bool as boolean;
+    this.instructionsBool = this.pageList.get("instructions")?.bool as boolean;
+
+    if (!this.initCanvasBool && currentPage == "canvas") {
       this.initCanvasVariables();
-      this.togglePageBools("canvas");
-      this.togglePageButtons(this.canvasButton);
-    } else {
+    } else if (this.initCanvasBool && currentPage != "canvas") {
       this.ctx.canvas.hidden = true;
       this.imageCtx.canvas.hidden = true;
+    } else if (this.initCanvasBool && currentPage == "canvas") {
+      this.ctx.canvas.hidden = false;
+      this.imageCtx.canvas.hidden = false;
     }
   }
 
-  toggleInstructions() {
-    if (!this.instructionsBool) {
-      this.togglePageBools("instructions");
-      this.togglePageButtons(this.instructionsButton);
-      this.ctx.canvas.hidden = true;
-      this.imageCtx.canvas.hidden = true;
-    }
-  }
+  toggleCanvasTool(currentToolName: string) {
+    this.canvasToolList.forEach((toolValues: {bool: boolean, button: HTMLButtonElement}, toolName: string) => {
+      if (toolName == currentToolName) {
+        (this.canvasToolList.get(toolName) as {bool: boolean, button: HTMLButtonElement}).bool = true;
+        (this.canvasToolList.get(toolName) as {bool: boolean, button: HTMLButtonElement}).button.style.background = this.darkenColour;
+      } else {
+        (this.canvasToolList.get(toolName) as {bool: boolean, button: HTMLButtonElement}).bool = false;
+        (this.canvasToolList.get(toolName) as {bool: boolean, button: HTMLButtonElement}).button.style.background = this.standardColour;
+      }
+    })
 
-  toggleVideoPlayer() {
-    if (!this.videoBool) {
-      this.togglePageBools("video");
-      this.togglePageButtons(this.videoButton);
-      this.ctx.canvas.hidden = true;
-      this.imageCtx.canvas.hidden = true;
-    };
+    if (currentToolName == "move") {this.canvasEl.nativeElement.style.cursor = "pointer"} else {this.canvasEl.nativeElement.style.cursor = "crosshair"}
+    if (!this.isImageSelected && currentToolName != "move") {this.isImageSelected = false;}
+    this.initialiseCanvasToolBools()
   }
-
-  toggleFeedback() {
-    if (!this.feedbackBool) {
-      this.togglePageBools("feedback");
-      this.togglePageButtons(this.feedbackButton);
-      this.ctx.canvas.hidden = true;
-      this.imageCtx.canvas.hidden = true;
-    }
-  }
-
-// ##################################
-// Toggle Canvas Tools
-// ##################################
   
   toggleMoveTool() {
-    this.toggleCanvasToolButtons(this.moveButton);
-    this.toggleCanvasToolBools("move");
+    this.toggleCanvasTool("move");
   }
 
   toggleBrushTool() {
-    this.toggleCanvasToolButtons(this.brushButton);
-    this.toggleCanvasToolBools("brush");
+    this.toggleCanvasTool("brush");
     this.ctx.lineWidth = 5
     this.ctx.strokeStyle = "#000000";
   }
 
   togglePenTool() {
-    this.toggleCanvasToolButtons(this.penButton);
-    this.toggleCanvasToolBools("pen");
+    this.toggleCanvasTool("pen");
     this.ctx.lineWidth = 5
     this.ctx.strokeStyle = "#000000";
   }
 
   toggleEraserTool() {
-    this.toggleCanvasToolButtons(this.eraserButton);
-    this.toggleCanvasToolBools("eraser");
+    this.toggleCanvasTool("eraser");
   }
 
   toggleOvalTool() {
-    this.toggleCanvasToolButtons(this.ovalButton);
-    this.toggleCanvasToolBools("oval");
+    this.toggleCanvasTool("oval");
   }
 
   toggleTrashTool() {
@@ -704,59 +696,27 @@ export class HomeComponent implements OnInit {
     this.imageCorners.bottomRight.yCenter = refImagePos.endYPos;
   }
 
-  togglePageButtons(currentPageButton: HTMLButtonElement) {
-    this.pageButtonList.forEach((pageButton: HTMLButtonElement) => {
-      if (pageButton == currentPageButton) {
-        pageButton.style.background = this.darkenColour;
-      } else {
-        pageButton.style.background = this.standardColour;
-      }
-    })
-  }
-
-  togglePageBools(currentPageName: string) {
-    this.pageBoolList.forEach((pageBool: boolean, pageName: string) => {
-      if (pageName == currentPageName) {
-        this.pageBoolList.set(pageName, true)
-      } else {
-        this.pageBoolList.set(pageName, false)
-      }
-    })
-    this.initialisePageBools()
-  }
-
-  toggleCanvasToolButtons(currentToolButton: HTMLButtonElement) {
-    this.canvasButtonList.forEach((canvasButton: HTMLButtonElement) => {
-      if (canvasButton == currentToolButton) {
-        canvasButton.style.background = this.darkenColour;
-      } else {
-        canvasButton.style.background = this.standardColour;
-      }
-    })
-  }
-
-  toggleCanvasToolBools(currentToolName: string) {
-    this.canvasToolBoolList.forEach((toolBool: boolean, toolName: string) => {
-      if (toolName == currentToolName) {
-        this.canvasToolBoolList.set(toolName, true)
-      } else {
-        this.canvasToolBoolList.set(toolName, false)
-      }
-    })
-    if (currentToolName == "move") {this.canvasEl.nativeElement.style.cursor = "pointer"} else {this.canvasEl.nativeElement.style.cursor = "crosshair"}
-    this.isImageSelected = false;
-    this.initialiseCanvasToolBools()
-  }
-
   initialiseCanvasToolBools() {
-    this.moveToolBool = this.canvasToolBoolList.get("move") as boolean;
-    this.brushToolBool = this.canvasToolBoolList.get("brush") as boolean;
-    this.penToolBool = this.canvasToolBoolList.get("pen") as boolean;
-    this.eraserToolBool = this.canvasToolBoolList.get("eraser") as boolean;
-    this.ovalToolBool = this.canvasToolBoolList.get("oval") as boolean;
+    this.moveToolBool = this.canvasToolList.get("move")?.bool as boolean;
+    this.brushToolBool = this.canvasToolList.get("brush")?.bool as boolean;
+    this.penToolBool = this.canvasToolList.get("pen")?.bool as boolean;
+    this.eraserToolBool = this.canvasToolList.get("eraser")?.bool as boolean;
+    this.ovalToolBool = this.canvasToolList.get("oval")?.bool as boolean;
   }
 
   intialiseVariables() {
+    this.initialisePageBools()
+    this.initialiseButtons()
+  }
+  
+  initialisePageBools() {
+    this.videoBool = true;
+    this.canvasBool = false;
+    this.feedbackBool = false;
+    this.instructionsBool = false;
+  }
+  
+  initialiseButtons() {
     this.videoButton = document.getElementById("video-button") as HTMLButtonElement
     this.canvasButton = document.getElementById("canvas-button") as HTMLButtonElement
     this.instructionsButton = document.getElementById("instructions-button") as HTMLButtonElement
@@ -768,21 +728,11 @@ export class HomeComponent implements OnInit {
     this.ovalButton = document.getElementById("oval-button") as HTMLButtonElement
     this.eraserButton = document.getElementById("eraser-button") as HTMLButtonElement
     this.trashButton = document.getElementById("trash-button") as HTMLButtonElement
-
-    this.initialisePageBools()
-  }
-  
-  initialisePageBools() {
-    this.videoBool = this.pageBoolList.get("video") as boolean;
-    this.canvasBool = this.pageBoolList.get("canvas") as boolean;
-    this.feedbackBool = this.pageBoolList.get("feedback") as boolean;
-    this.instructionsBool = this.pageBoolList.get("instructions") as boolean;
   }
 
   initCanvasVariables() {
     this.initCanvasBool = true;
-    this.toggleCanvasToolBools("move");
-    this.toggleCanvasToolButtons(this.moveButton);
+    this.toggleCanvasTool("move");
     this.ctx = this.canvasEl.nativeElement.getContext('2d') as CanvasRenderingContext2D;
     this.imageCtx = this.canvasRefImage.nativeElement.getContext('2d') as CanvasRenderingContext2D;
     this.setEraser = () => this.ctx.globalCompositeOperation = 'destination-out'

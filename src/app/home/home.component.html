@@ -45,8 +45,7 @@
             <div class="image-corners" id="corner-1" [hidden]="!isImageSelected" [style.left]="imageCorners.topRight.startXPos + 'px'" [style.top]="imageCorners.topRight.startYPos + 'px'"></div>
             <div class="image-corners" id="corner-2" [hidden]="!isImageSelected" [style.left]="imageCorners.bottomLeft.startXPos + 'px'" [style.top]="imageCorners.bottomLeft.startYPos + 'px'"></div>
             <div class="image-corners" id="corner-3" [hidden]="!isImageSelected" [style.left]="imageCorners.bottomRight.startXPos + 'px'" [style.top]="imageCorners.bottomRight.startYPos + 'px'"></div>
-            <canvas class="canvas-ref-image" id="canvas-ref-image" 
-                #canvasRefImage>
+            <canvas class="canvas-ref-image" id="canvas-ref-image" #canvasRefImage>
             </canvas>
         </div>
         <video [hidden]="!videoBool" id="video-container" src="#" type="video/mp4" controls></video>
@@ -88,19 +87,19 @@
     </div>
     
     <div class="button-container">
-        <button id="video-button" mat-raised-button color="primary" type="button" (hover)="true" (click)="toggleVideoPlayer()">
+        <button id="video-button" mat-raised-button color="primary" type="button" (hover)="true" (click)="togglePage('video')">
             <fa-icon [icon]="faPaintBrush" transform="grow-2"></fa-icon>
             <div>Video Player</div>
         </button>
-        <button id="canvas-button" mat-raised-button color="primary" type="button" (click)="toggleCanvas()">
+        <button id="canvas-button" mat-raised-button color="primary" type="button" (click)="togglePage('canvas')">
             <fa-icon [icon]="faPenToSquare" transform="grow-2"></fa-icon>
             <div>Canvas</div>
         </button>
-        <button id="instructions-button" mat-raised-button color="primary" type="button" (click)="toggleInstructions()">
+        <button id="instructions-button" mat-raised-button color="primary" type="button" (click)="togglePage('instructions')">
             <fa-icon [icon]="faCircleInfo" transform="grow-2"></fa-icon>
             <div>Instructions</div>
         </button> 
-        <button id="feedback-button" mat-raised-button color="primary" type="button" (click)="toggleFeedback()">
+        <button id="feedback-button" mat-raised-button color="primary" type="button" (click)="togglePage('feedback')">
             <fa-icon [icon]="faComments" transform="grow-2"></fa-icon>
             <div>Feedback</div>
         </button> 
